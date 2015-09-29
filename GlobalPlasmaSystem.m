@@ -7,6 +7,8 @@ global V %volume
 global K %this is equal to k7 in Efremov study
 global k9
 global A
+global L
+global sigma
 %Constants
 %PrevX = MakeDimensional(x,i);
 %Te = PrevX(10);
@@ -59,7 +61,9 @@ x(10)-x(5)/x(4); %10 beta-nCl_neg/ne
 x(10) - x(11)*exp((1+x(11))*(x(12)-1)/(2*(1+x(11)*x(12))));%11, Beta - BetaS*exp((1+BetaS)*(gamma_T-1)/(2*(1+BetaS*gamma_T)))
 2*(k1*x(1)+k5*x(2)+k6*x(3))+(k2-k3)*x(1)-(1+x(10))*(2*(x(14)+x(10)*x(4)))+k8*x(4)*x(10);%12;%17, 2*(k1*nCl2+k5*nCl+k6*nAr)+(k3-k3)*nCl2-(1+Beta)*(2*v/dc+k7*Beta*ne)+k8*ne*Beta
 x(13)-1; %13 dc-1
-W/(massIon/q*(K*n0*x(13)*dcConstant)^2*n0*A)-x(14)*(x(6)+x(7)+x(8))];%14 W-v*(nCl2_pos+nCl_pos+nAr_pos)
+W/(massIon/q*(K*n0*x(13)*dcConstant)^2*n0*A)-x(14)*(x(6)+x(7)+x(8));%14 W-v*(nCl2_pos+nCl_pos+nAr_pos)
+x(15)-x(16)/(L*sigma*n0)*sqrt(x(9)/x(12)/2)*(1+x(12)+2*x(12)*x(10))/(1+x(10)*x(12))
+x(16)-1];
 
  
 % % 
