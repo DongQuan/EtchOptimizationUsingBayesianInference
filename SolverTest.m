@@ -13,6 +13,7 @@ global A %area
 global K %this is equal to k7 in Efremov study
 global plasmaUnknowns;
 global k9
+global sigma
 
 %Define Constants
 massIon = 35.45*(1.660568e-27); %kg
@@ -24,7 +25,8 @@ T = 303;
 V = pi*R^2*L;
 A = 2*pi*R*L + 2*pi*R^2;
 K = 5e-14; %(m^3/2)
-plasmaUnknowns = 14;
+plasmaUnknowns = 16;
+sigma = 16.8e-24;
 
 %Calculate k9
 diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2)
@@ -60,7 +62,11 @@ parameter(11).name = 'BetaS';
 parameter(12).name = 'gamma_T';
 parameter(13).name = 'dc';
 parameter(14).name = 'v';
-x0 = [1 1 1 1 1 1 1  1 3 1 1 20 A 10e+6];
+parameter(15).name = 'D';
+parameter(16).name = 'lambda';
+parameter(16).name = 'hl';
+parameter(16).name = 'hr';
+x0 = [1 1 1 1 1 1 1  1 3 1 1 20 A 10e+6 1 1];
 
 %Solve initial system
 opts = optimset('MaxFunEvals',10e+8,'MaxIter',10e+8,'display','iter');
