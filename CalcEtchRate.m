@@ -1,23 +1,25 @@
-function F = CalcEtchRate(i,x4)
-global q_e
-global ExpParameters
-global TeSet;
-nCl2_pos = x4(6);
-nCl_pos = x4(7);
-nAr_pos = x4(8);
-nCl = x4(2);
-Te = x4(9);
-v = x4(12);
+function F = CalcEtchRate(plasmaVariables,expNo)
+global expParameters %ion mass
+global q
+
+
+BiasFactor = expParameters(expNo,6);
+nCl2_pos = plasmaVariables(6);
+nCl_pos = plasmaVariables(7);
+nAr_pos = plasmaVariables(8);
+nCl = plasmaVariables(2);
+Te = plasmaVariables(9);
+v = plasmaVariables(14);
 SCl = .3;
 KCl = .5;
-density_MgO = 3.56;
+density_MgO = 3.56e+3; %kg/m^3
 M = 40.3;
 Na = 6.02e+23;
 RxnProb = .25; %SCl*KCl;
 FluxCl = nCl*v;
 FluxAr_pos = nAr_pos*v;
 TotalPosFlux = v*(nAr_pos+nCl_pos+ nCl2_pos);
-Vdc = ExpParameters(i,6)*q_e;%-BiasFactor*Prf/TotalPosFlux;
+Vdc = BiasFactor*q;%-BiasFactor*Prf/TotalPosFlux;
 
 %Surface Kinetics Problem
 E = 6.0*Te + -Vdc; 
@@ -27,10 +29,10 @@ end
 
 eos = 40; %eV
 eod = 10; % eV
-A = .05;
-B = A;
-Yd = B*(sqrt(E)-sqrt(eod));
-Ys = A*(sqrt(E)-sqrt(eos));
+A1 = .05;
+B1 = A1;
+Yd = B1*(sqrt(E)-sqrt(eod));
+Ys = A1*(sqrt(E)-sqrt(eos));
 if Ys<0
     Ys = 0;
 end
@@ -52,7 +54,7 @@ assignin('base', 'v', v);
 assignin('base', 'Vdc', Vdc);
 assignin('base', 'Te', Te);
 EtchRate = (1-RxnProb*FluxCl/(RxnProb*FluxCl + Yd*TotalPosFlux))*(RxnProb*FluxCl+Ys*FluxAr_pos);
-EtchRate = EtchRate*6e+8*M/(Na*density_MgO); %nm/min
+EtchRate = EtchRate*6e+7*M/(Na*density_MgO); %nm/min %6 comes from s to min
 assignin('base', 'EtchRate', EtchRate);
 F = EtchRate; 
 end
