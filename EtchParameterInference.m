@@ -3,46 +3,24 @@ clear
 close all
 rng('default');
 % declare global variables
-global NoUnknowns;
-global PlasmaUnknowns;
-global mean;
-global sd;
-global data;
-global ExpParameters;
-global NoExpParameters;
-global kb;
-global q_e;
-global m;
-global Ncount;
-global TeSet;
-global PlasmaSet;
-global NoTestCases;
-global NoTrainingCases;
-global R
-global L
-global T
+global massIon %ion mass
+global kb %boltzmann constant
+global q %electron charge
+global R %radius of chamber
+global L %length of chamber
+global T %temperature of system (treat constant)
+global V %volume
+global A %area
+global K %this is equal to k7 in Efremov study
+global plasmaUnknowns
+global k9
+global sigma
+global expParameters
+global data
 
-PlasmaUnknowns = 13;
 
-T=303;
-%expected = ones(PlasmaUnknowns,1);
-%expected = [55095814844086.1;101475208406599;329220334554379;90032639236.4039;1095565830579.84;353668816411.769;283304598471.479;550311324050.914;13536.5675575172;13.4965699021813;1125556456943.75;713269.004827848;260304.221525799;0.236512721004300;29115.7001080982;0.0477192010228074;696918.543558563];
-expected = [10e+13
-10.00e+13
-1e+14
-10e+10
-1e+11
-1e+11
-10e+10
-1e+10
-1
-10e-01
-1
-100000
-30];
 
-NoExpParameters = 7;
-Ncount = 0;
+
 kb = 1.381*10^-23;
 T = 303;
 q_e = 1.6e-19;

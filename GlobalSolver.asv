@@ -14,6 +14,7 @@ global K %this is equal to k7 in Efremov study
 global plasmaUnknowns;
 global k9
 global sigma
+global expParameters;
 
 %Define Constants
 massIon = 35.45*(1.660568e-27); %kg
@@ -24,15 +25,20 @@ L = 0.14; %m
 T = 303;
 V = pi*R^2*L;
 A = 2*pi*R*L + 2*pi*R^2;
-K = 5e-14; %(m^3/2)
+K = 5e-14; %(m^3/s)
 plasmaUnknowns = 18;
 sigma = 16.8e-24;
+expParameters = FactorialDesign();
 
 %Calculate k9
 diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2)
 Df = diffusionLength/3*sqrt(8*kb*T/(pi*massIon)); %need to calculate effective diffusion coefficient
 recombinationProbability = (0.2+10e-3+0.05)/3;
 k9 = recombinationProbability*Df/(diffusionLength^2);
+
+%Calculate neutral density
+P = 0.5;
+n0 = P/(kb*T);
 
 %Define means for Bayesian parameters
 k7_nond = 5e-8;
@@ -48,13 +54,41 @@ Act = mean(1:7);
 B = mean(8:14);
 
 %Solve initial system
-opts = optimset('MaxFunEvals',10e+8,'MaxIter',10e+8,'display','iter');
+%opts = optimset('MaxFunEvals',10e+5,'MaxIter',10e+5, 'TolX', 10e-20,'Display','on');
 %x1 = fsolve(@GlobalPlasmaSystem,x0,opts);
 opts = optimoptions(@fmincon,'Algorithm','interior-point','Display','off','TolCon',10e-10);
 l = zeros(plasmaUnknowns,1);
-u = [Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf];
-%x1 = fmincon(@(x)0,x0,[],[],[],[],l,u,@(x)fminconstr(x,Act,B,1),opts);
-x0 = ones(18,1);
-f
-problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@fminconstr(x,Act,B,1),'x0',x0,'options',optimset('OutputFcn',@PlotIterate)
-[x1,f1] = fmincon(problem)
+u = [n0 n0 n0 n0 n0 n0 n0 n0 20 Inf Inf Inf Inf Inf Inf Inf Inf Inf];
+%x = @(x)fminconstr(x,Act,B,expNo);
+x0 = [
+10E+17
+10E+17
+10E+17
+10E+17
+10E+14
+10E+17
+10E+17
+10E+17
+1
+1
+1
+1
+.01
+10e+3
+1
+1
+1
+1];
+
+[x,resnorm,residual,exitflag,output] = lsqnonlin(@GlobalPlasmaSystemWithDimensions,x0,l,u,opts);
+%Make synthetic experiments
+SynER = zeros(1,length(expParameters));
+stpoints = RandomStartPointSet('NumStartPoints',10,'ArtificialBound',100);
+for expNo=31:31%length(expParameters)
+    problem = createOptimProblem('lsqnonlin','objective',@GlobalPlasmaSystemWithDimensions,'x0',x0,'lb',l,'ub', u);
+    %[x1,f1] = fmincon(problem);
+    ms = MultiStart;
+    [xmulti,errormulti]=run(ms,problem,stpoints)
+    %plasmaCalcVariables = MakeDimensional(solutions.X,expNo);
+    SynER(expNo) = CalcEtchRate(xmultu,expNo);
+end

@@ -16,15 +16,15 @@ global expParameters
 
 Te = expParameters(expNo,7);
 
-k7_nond = 5e-8;
-k1 = 3e-10/k7_nond;
-k2 = 2.1e-12/k7_nond;
-k3 = 1.5e-10/k7_nond;
-k4 = 3e-9/k7_nond;
-k5 = 1e-10/k7_nond;
-k6 = 2e-11/k7_nond;
+k7_nond = 5e-14;
+k1 = 3e-16/k7_nond;
+k2 = 2.1e-18/k7_nond;
+k3 = 1.5e-16/k7_nond;
+k4 = 3e-15/k7_nond;
+k5 = 1e-16/k7_nond;
+k6 = 2e-17/k7_nond;
 k8 = k2;
-k = CalculateRates(Act,B,Te);
+%k = CalculateRates(Act,B,Te);
 % assignin('base', 'k', k*k7_nond);
 % k1 = k(1);
 % k2 = k(2);
