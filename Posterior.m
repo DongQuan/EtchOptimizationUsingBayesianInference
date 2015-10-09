@@ -1,5 +1,5 @@
-function [F ,PlasmaParams]  = Posterior(current,i,expected)
-[L , PlasmaParams] = Likelihood(current,expected);
+function [F]  = Posterior(current,i)
+[L] = Likelihood(current);
 posterior = L + Prior(current,i);
 F = posterior;
 end

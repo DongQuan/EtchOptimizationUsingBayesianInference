@@ -7,7 +7,7 @@ RFPower = [100 200];
 delta = [0 .5 1];
 dcbias = [0 300];
 ind =1;
-ExpSet = zeros(length(Pressure)*length(flowRate)*length(ICPPower)*length(RFPower)*length(delta)*length(dcbias),7)
+ExpSet = zeros(length(Pressure)*length(flowRate)*length(ICPPower)*length(RFPower)*length(delta)*length(dcbias),7);
 for P=1:length(Pressure)
     for f=1:length(flowRate)
         for ICP = 1:length(ICPPower)
@@ -15,7 +15,7 @@ for P=1:length(Pressure)
                  for d = 1:length(delta)
                        for dc= 1:length(dcbias)
                            Te = delta(d)/(Pressure(P))+(ICPPower(ICP)+RFPower(RF))/1000 +2;
-                           ExpSet(ind,5) = delta(d) ;    
+                           ExpSet(ind,5) = delta(d);    
                            ExpSet(ind,4) = RFPower(RF);       
                            ExpSet(ind,3) = ICPPower(ICP) ;
                             ExpSet(ind,2) = flowRate(f);
@@ -29,5 +29,5 @@ for P=1:length(Pressure)
         end
     end
 end
-F = ExpSet
+F = ExpSet;
 end

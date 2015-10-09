@@ -1,4 +1,4 @@
-function F = GlobalPlasmaSystemWithDimensions(x)
+function F = GlobalPlasmaSystemWithDimensions(x,Act,B)
 global massIon %ion mass
 global kb %boltzmann constant
 global q %electron charge
