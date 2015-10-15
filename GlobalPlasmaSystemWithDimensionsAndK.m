@@ -35,7 +35,7 @@ n0 = P/(kb*T);%initial neutral density
 Picp = expParameters(expNo,3);
 Prf = expParameters(expNo,4);
 W = Picp + Prf;
-
+TeV =  8.621738*10e-5 *T;
 % parameter(1).name = 'nCl2';
 % parameter(2).name = 'nCl';
 % parameter(3).name = 'nAr';
@@ -54,7 +54,6 @@ W = Picp + Prf;
 % parameter(16).name = 'lambda';
 % parameter(17).name = 'hl';
 % parameter(18).name = 'hr';
-length(x)
 %Functions
 F=[
 (2*x(22) + x(21))*x(4) * x(1) - (k9+1/tau)*x(2); %1, (2*k4+k3)*ne*nCl2-(k9+1/tau)nCl
@@ -75,13 +74,14 @@ x(15)-x(16)*sqrt(q*x(9)/(2*massIon))*(1+x(12)+2*x(12)*x(10))/(1+x(10)*x(12));
 x(16)-1/(sigma*n0);
 x(17)-(1+2*x(11)/x(12))/(1+x(11))*0.86/sqrt(3+L/(x(16)*2)+(.86*L*x(14)/(pi*x(12)*x(15)))^2);
 x(18)-(1+3*x(11)/x(12))/(1+x(11))*0.8/sqrt(4+R/x(16)+(.8*R*x(14)/(2.405*0.43*x(12)*x(15)))^2);
-x(19) - Act(1)*exp(-B(1)/x(9));%k1
-x(20) - Act(2)*exp(-B(2)/x(9));%k2
-x(21) - Act(3)*exp(-B(3)/x(9));%k3
-x(22) - Act(4)*exp(-B(4)/x(9));%k4
-x(23) - Act(5)*exp(-B(5)/x(9));%k5
-x(24) - Act(6)*exp(-B(6)/x(9));%k6
-x(25) - Act(7)*exp(-B(7)/x(9))];%k8
+% x(19) - Act(1)*exp(-B(1)/x(9));%k1
+% x(20) - Act(2)*exp(-B(2)/x(9));%k2
+% x(21) - Act(3)*exp(-B(3)/x(9));%k3
+% x(22) - Act(4)*exp(-B(4)/x(9));%k4
+% x(23) - Act(5)*exp(-B(5)/x(9));%k5
+% x(24) - Act(6)*exp(-B(6)/x(9));%k6
+% x(25) - Act(7)*exp(-B(7)/x(9));
+x(9)/x(12)-TeV - (.5-TeV)/P];%k8
 
 
 % 
