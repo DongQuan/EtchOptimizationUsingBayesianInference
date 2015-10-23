@@ -1,4 +1,5 @@
 global massIon %ion mass
+global massElectron
 global kb %boltzmann constant
 global q %electron charge
 global R %radius of chamber
@@ -52,7 +53,7 @@ expParameters = FactorialDesign();
 current = [k1 k2 k3  k4 k5 k6 k8 0 0 0 0 0 0 0 0];
 xmulti=zeros(25,10);
 predER = zeros(1,10);
-for trial=1:3
+for trial=1:1
     for expNo=1:1%length(expParameters)
         xmulti(:,trial) = GlobalSolver(current,expNo);
         %PredER(trial) = CalcEtchRate(xmulti(:,trial),expNo);

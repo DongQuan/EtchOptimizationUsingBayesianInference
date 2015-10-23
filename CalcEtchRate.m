@@ -1,7 +1,7 @@
 function F = CalcEtchRate(plasmaVariables,expNo)
 global expParameters %ion mass
 global q
-
+expNo = 31;
 
 BiasFactor = expParameters(expNo,6);
 nCl2_pos = plasmaVariables(6);

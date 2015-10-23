@@ -1,4 +1,4 @@
-function F = GlobalSolver(current,expNo)
+%function F = GlobalSolver(current,expNo)
 %Test function for global plasma system
 %All SI units (m)
 
@@ -16,11 +16,9 @@ global k9
 global sigma
 global expParameters;
 P = expParameters(expNo,1);
+T = 303;
 n0 = P/(kb*T);
 
-%Grab parameter guesses
-Act = current(1:7);
-B = current(8:14);
 
 
 
@@ -36,44 +34,21 @@ k4 = 3e-15;
 k5 = 1e-16;
 k6 = 2e-17;
 k8 = k2;
-kGuess = 10e-16;
-%x = @(x)fminconstr(x,Act,B,expNo);
-x0 = [
-10E+17
-10E+17
-10E+17
-10E+17
-10E+14
-10E+17
-10E+17
-10E+17
-1
-1
-1
-1
-.01
-10e+3
-1
-1
-1
-1
-k1
-k2
-k3
-k4
-k5
-k6
-k8];
+kGuess = 4e-16;
+current = [k1 k2 k3  k4 k5 k6 k8 0 0 0 0 0 0 0 0];
+%Grab parameter guesses
+Act = current(1:7);
+B = current(8:14);
 
 % x0 = [
-% n0
-% n0
-% n0
-% n0
-% n0
-% n0
-% n0
-% n0
+% 10E+17
+% 10E+17
+% 10E+17
+% 10E+17
+% 10E+14
+% 10E+17
+% 10E+17
+% 10E+17
 % 1
 % 1
 % 1
@@ -84,13 +59,45 @@ k8];
 % 1
 % 1
 % 1
-% kGuess
-% kGuess
-% kGuess
-% kGuess
-% kGuess
-% kGuess
-% kGuess];
+% k1
+% k2
+% k3
+% k4
+% k5
+% k6
+% k8];
+lambdaMax = 1/(sigma*n0);
+maxTe = 25;
+vMax = sqrt(q*maxTe/massIon);
+DMax = lambdaMax*vMax;
+kNorm = 10e-20;
+nNorm = n0;
+x0 = [
+n0/nNorm;
+n0/nNorm;
+n0/nNorm;
+n0/nNorm;
+n0/nNorm;
+n0/nNorm;
+n0/nNorm;
+n0/nNorm;
+1
+1
+1
+1
+.01
+10e+3/vMax;
+1
+1
+1
+1
+kGuess/kNorm;
+kGuess/kNorm;
+kGuess/kNorm;
+kGuess/kNorm;
+kGuess/kNorm;
+kGuess/kNorm;
+kGuess/kNorm];
 
 Te = 2.3;
 Beta = 1.6;
@@ -109,10 +116,11 @@ dc = 0.0729;
 lambda = 1/(sigma*n0);
 
 
-%x0 = ones(25,1);
+%x0 = ones(plasmaUnknowns,1);
+
 
 %u = [n0 n0 n0 n0/1000 n0/100 n0/100 n0/100 n0/100 2 Inf Inf Inf Inf 2000 Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf];
-l = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 k1  k2 k3 k4 k5 k6 k8];
+
 % l(1) = nCl2;
 % l(2) = nCl;
 % l(3) = nAr;
@@ -128,7 +136,7 @@ l = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 k1  k2 k3 k4 k5 k6 k8];
 % l(13) = dc;
 % l(14) = v;
 % l(16) = lambda;
-u = [Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf  Inf Inf Inf Inf Inf  k1  k2 k3 k4 k5 k6 k8];
+
 % u(1) = nCl2;
 % u(2) = nCl;
 % u(3) = nAr;
@@ -144,20 +152,68 @@ u = [Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf Inf  Inf Inf Inf Inf In
 % u(13) = dc;
 % u(14) = v;
 % u(16) = lambda;
-%fun = @(x)GlobalPlasmaSystemWithDimensionsAndK(x,Act,B);
-%fun = @(x)0,x0,[],[],[],[],l,[],@fminconstr;
-%problem = createOptimProblem('fmincon','objective',@(x)0,x0,[],[],[],[],l,[],@fminconstr,'x0',x0);
-%problem = createOptimProblem('fmincon','objective',fun,'x0',x0,'lb',l,'ub', u);
-%stpoints = RandomStartPointSet('NumStartPoints',10);
-%ms = MultiStart;
-%[xmulti, fval, exitflag, output]=run(ms,problem,stpoints)
-opts = optimoptions(@fmincon,'TolCon',10e-3);
+
+
+% l(19) = k1/kNorm;
+% l(20) = k2/kNorm;
+% l(21) = k3/kNorm;
+% l(22) = k4/kNorm;
+% l(23) = k5/kNorm;
+% l(24) = k6/kNorm;
+% l(25) = k8/kNorm;
+l = zeros(plasmaUnknowns,1);
+l(10) = 1;
+l(12) = 1;
+u = Inf(plasmaUnknowns,1);
+% l(19) = k1;
+% l(20) = k2;
+% l(21) = k3;
+% l(22) = k4;
+% l(23) = k5;
+% l(24) = k6;
+% l(25) = k8;
+% u(19) = k1;
+% u(20) = k2;
+% u(21) = k3;
+% u(22) = k4;
+% u(23) = k5;
+% u(24) = k6;
+% u(25) = k8;
+% u(19) = k1/kNorm;
+% u(20) = k2/kNorm;
+% u(21) = k3/kNorm;
+% u(22) = k4/kNorm;
+% u(23) = k5/kNorm;
+% u(24) = k6/kNorm;
+% u(25) = k8/kNorm;
+opts = optimoptions(@fmincon,'TolCon',10e-10,'MaxFunEvals',10e+4,'Maxiter',10e+4);
 problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B),'x0',x0,'lb',l,'ub',u,'options',opts);
+trials = 10; %4:07
+startPoints = zeros(trials,plasmaUnknowns);
+for i=1:trials
+    for n=1:8
+        startPoints(i,n) = 1/i+10e-4;%unifrnd(10e-3,1000);
+    end
+    for n=9:18
+        startPoints(i,n) = 20/i+10e-3;%unifrnd(10e-3,20);
+    end
+    startPoints(i,10) = 20/i+1;%unifrnd(1,20);
+    startPoints(i,12) = 20/i+1; %unifrnd(1,20);
+    for n=19:25
+        startPoints(i,n) = 1000/i+10e-5;%unifrnd(10e-5,10);
+    end
+end
 %[x1,f1] = fmincon(problem);
-gs = GlobalSearch('NumTrialPoints',10000,'TolX',10e-14);
-[xg,gf,exitflag,output,solutions]=run(gs,problem)
-%[xmulti, fval] = gamultiobj(fun,25,[],[],[],[],l,u)
-%PredER = CalcEtchRate(xmulti,expNo);
+tpoints = CustomStartPointSet(startPoints);
+MS = MultiStart;
+%gs = GlobalSearch(ms,'NumTrialPoints',1000,'TolX',10e-20);
+[x, f] = run(MS,problem,tpoints);
+xFinal = Rescale(x);
+%[xg,gf,exitflag,output,solutions]=run(gs,problem)
+
+%xg = fmincon(@(x)0,x0,[],[],[],[],l,u,@(x)fminconstr(x,Act,B),opts);
+
+PredER = CalcEtchRate(xFinal,31);
 
 
-F = xg;
+%F = xg;
