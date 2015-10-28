@@ -1,4 +1,4 @@
-%function F = GlobalSolver(current,expNo)
+function F = GlobalSolver(current,expNo)
 %Test function for global plasma system
 %All SI units (m)
 
@@ -16,26 +16,13 @@ global k9
 global sigma
 global expParameters;
 P = expParameters(expNo,1);
-T = 303;
 n0 = P/(kb*T);
-
-
-
-
-opts = optimoptions(@fmincon,'Algorithm','interior-point','Display','off','TolCon',10e-10);
-l = zeros(plasmaUnknowns,1);
-l(9) = 2;
-% l(14) = 50;
-%Define bounds for rates
-k1 = 3e-16;
-k2 = 2.1e-18;
-k3 = 1.5e-16;
-k4 = 3e-15;
-k5 = 1e-16;
-k6 = 2e-17;
-k8 = k2;
+Te = expParameters(expNo,7);
+nCl = expParameters(expNo,8);
+v = expParameters(expNo,9);
 kGuess = 4e-16;
-current = [k1 k2 k3  k4 k5 k6 k8 0 0 0 0 0 0 0 0];
+etchGuess = 50;
+
 %Grab parameter guesses
 Act = current(1:7);
 B = current(8:14);
@@ -99,13 +86,11 @@ kGuess/kNorm;
 kGuess/kNorm;
 kGuess/kNorm];
 
-Te = 2.3;
 Beta = 1.6;
 BetaS = 7.44e-1;
 gamma_T = 28;
 v = 70610;
 nCl2 = 7.57e+19;
-nCl = 9e+19;
 nAr = 1.21e+20;
 ne = 8e+19;
 nCl_neg = 1.28e+17;
@@ -129,7 +114,7 @@ lambda = 1/(sigma*n0);
 % l(6) = nCl2_pos;
 % l(7) = nCl_pos;
 % l(8) = nAr_pos;
-% l(9) = Te;
+%l(9) = Te;
 % l(10) = Beta;
 % l(11) = BetaS;
 % l(12) = gamma_T;
@@ -145,7 +130,7 @@ lambda = 1/(sigma*n0);
 % u(6) = nCl2_pos;
 % u(7) = nCl_pos;
 % u(8) = nAr_pos;
-% u(9) = 2.3;
+%u(9) = Te;
 % u(10) = Beta;
 % u(11) = BetaS;
 % u(12) = gamma_T;
@@ -164,7 +149,17 @@ lambda = 1/(sigma*n0);
 l = zeros(plasmaUnknowns,1);
 l(10) = 1;
 l(12) = 1;
+%l(2) = nCl;
 u = Inf(plasmaUnknowns,1);
+l(9) = Te;
+u(5) = 1/1000;
+u(6) = 1/1000;
+u(7) = 1/1000;
+u(8) = 1/1000;
+u(9) = Te;
+u(10) = 4;
+u(14) = v/vMax;
+u(2) = 1%nCl;
 % l(19) = k1;
 % l(20) = k2;
 % l(21) = k3;
@@ -186,9 +181,10 @@ u = Inf(plasmaUnknowns,1);
 % u(23) = k5/kNorm;
 % u(24) = k6/kNorm;
 % u(25) = k8/kNorm;
-opts = optimoptions(@fmincon,'TolCon',10e-10,'MaxFunEvals',10e+4,'Maxiter',10e+4);
-problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B),'x0',x0,'lb',l,'ub',u,'options',opts);
-trials = 10; %4:07
+%u(26) = 200;
+opts = optimoptions(@fmincon,'TolCon',10e-12,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-10);
+problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
+trials = 20;
 startPoints = zeros(trials,plasmaUnknowns);
 for i=1:trials
     for n=1:8
@@ -202,18 +198,17 @@ for i=1:trials
     for n=19:25
         startPoints(i,n) = 1000/i+10e-5;%unifrnd(10e-5,10);
     end
+    %startPoints(i,26) = 50/i+1; %unifrnd(1,20);
 end
 %[x1,f1] = fmincon(problem);
 tpoints = CustomStartPointSet(startPoints);
 MS = MultiStart;
 %gs = GlobalSearch(ms,'NumTrialPoints',1000,'TolX',10e-20);
 [x, f] = run(MS,problem,tpoints);
-xFinal = Rescale(x);
+
 %[xg,gf,exitflag,output,solutions]=run(gs,problem)
+%x = fmincon(@(x)0,x0,[],[],[],[],l,u,@(x)fminconstr(x,Act,B,expNo),opts);
+xFinal = Rescale(x,expNo);
+%etchRate = CalcEtchRate(xFinal,expNo);
 
-%xg = fmincon(@(x)0,x0,[],[],[],[],l,u,@(x)fminconstr(x,Act,B),opts);
-
-PredER = CalcEtchRate(xFinal,31);
-
-
-%F = xg;
+F = xFinal;

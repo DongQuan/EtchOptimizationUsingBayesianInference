@@ -1,4 +1,4 @@
-function F = Rescale(x1)
+function F = Rescale(x1,expNo)
 global sigma
 global massIon
 global expParameters
@@ -6,7 +6,6 @@ global kb
 global T
 global q
 x2 = x1;
-expNo = 31;
 P = expParameters(expNo,1); %Pa
 n0 = P/(kb*T);%initial neutral density
 lambdaMax = 1/(sigma*n0);

@@ -47,10 +47,9 @@ k4 = 3e-15;
 k5 = 1e-16;
 k6 = 2e-17;
 k8 = k2;
-mean = [k1 k2 k3  k4 k5 k6 k8 2 6 3 2 4 1 2 0];
-sd(15) = 0;
-allExpParameters = FactorialDesign();
-noExpParameters = 7;
+mean = [k1 k2 k3  k4 k5 k6 k8 2 6 3 2 4 1 2 20];
+sd = [1 1 1 1 1 1 1 5 5 5 5 5 5 5 20];
+noExpParameters = 8;
 
 %Calculate k9
 diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2)
@@ -59,28 +58,29 @@ recombinationProbability = (0.2+10e-3+0.05)/3;
 k9 = recombinationProbability*Df/(diffusionLength^2);
 
 %Split data into training and test sets
-AllData = LoadSynData();
-TrainingDataIndex = randperm(size(allExpParameters,1)+1);
-TrainingDataIndex = TrainingDataIndex(1:size(allExpParameters,1)/2)-1;
-NoTrainingCases = length(TrainingDataIndex);
-NoTestCases = size(allExpParameters,1) - NoTrainingCases;
-TrainingData = zeros(NoTrainingCases,1);
-TrainingExp = zeros(NoTrainingCases,noExpParameters);
-TestData = zeros(NoTestCases,1);
-TestExp = zeros(NoTestCases,noExpParameters);
-for i=1:NoTrainingCases
-    TrainingData(i) = AllData(TrainingDataIndex(i));
-    TrainingExp(i,:) = allExpParameters(TrainingDataIndex(i),:);
+allEtchRates = xlsread('SyntheticData.xlsx','EtchRates');
+allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
+trainingDataIndex = randperm(size(allEtchRates,1)+1);
+trainingDataIndex = trainingDataIndex(1:size(allEtchRates,1)/2)-1;
+noTrainingCases = length(trainingDataIndex);
+noTestCases = size(allEtchRates,1) - noTrainingCases;
+trainingData = zeros(noTrainingCases,1);
+trainingExp = zeros(noTrainingCases,noExpParameters);
+testData = zeros(noTestCases,1);
+testExp = zeros(noTestCases,noExpParameters);
+for i=1:noTrainingCases
+    trainingData(i) = allEtchRates(trainingDataIndex(i));
+    trainingExp(i,:) = allExpParameters(trainingDataIndex(i),:);
 end
-for i=1:NoTestCases
-    if i~=(TrainingDataIndex(i))
-    TestData(i) = AllData(i);
-    TestExp(i,:) = allExpParameters(i,:);
+for i=1:noTestCases
+    if i~=(trainingDataIndex(i))
+    testData(i) = allEtchRates(i);
+    testExp(i,:) = allExpParameters(i,:);
     end
 end
-%Merge training and test data to one matrix
-data = cat(1,TrainingData,TestData);
-expParameters = cat(1,TrainingExp,TestExp);
+%assign training data and exp parameters to global variables
+data = trainingData;%cat(1,trainingData,testData);
+expParameters = trainingExp; %cat(1,trainingExp,testExp);
 
 %Make initial guess
 current = zeros(noUnknowns,1);
@@ -94,39 +94,36 @@ end
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 1;     % Number of samples (iterations)
+N       = 300;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*noUnknowns,noUnknowns); 
 acc = 0;
 
 %initialize plasma arrays
-AlphaSet = zeros(N,NoUnknowns);
-EtchRateSetMean = zeros(1, length(TrainingData));
-TestEtchRateSetMean = zeros(1, length(TestData));
-EtchRateSetMode = zeros (1,length(TrainingData));
-DimensionlessSet = zeros(17,N);
-PlasmaParamsSet=zeros(PlasmaUnknowns,N);
+AlphaSet = zeros(N,noUnknowns);
+EtchRateSetMean = zeros(1, length(trainingData));
+TestEtchRateSetMean = zeros(1, length(testData));
+EtchRateSetMode = zeros (1,length(trainingData));
 % for i = 1:burnin    % First make the burn-in stage
 %     [t] = MetropolisHastings(current);
 % end
 count = 0;
 
-% %Peform MH iterations
-% for cycle = 1:N   % Cycle to the number of samples
-%     %for j = 1:lag 
-%     for j=1:1%NoUnknowns % Cycle to make the thinning
-%         [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j,expected);
-%         theta(index,:) = t;        % Samples accepted
-%         AlphaSet(i,j) = alpha;
-%         index = index + 1;
-%         current = t;
-%         PosteriorCurrent = PosteriorCatch;
-%     end
-%     PlasmaParamsSet(:,i) = expected;
-%     acc      = acc + a;  % Accepted ?
-%     count = count+1
-% end
+%Peform MH iterations
+for cycle = 1:N   % Cycle to the number of samples
+    %for j = 1:lag 
+    for j=1:noUnknowns % Cycle to make the thinning
+        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
+        theta(index,:) = t;        % Samples accepted
+        AlphaSet(i,j) = alpha;
+        index = index + 1;
+        current = t;
+        PosteriorCurrent = PosteriorCatch;
+    end
+    acc      = acc + a;  % Accepted ?
+    count = count+1
+end
 % accrate = acc/N;     % Acceptance rate
 % hf2 = mode(theta);
 % hfmean = zeros(1,NoUnknowns);

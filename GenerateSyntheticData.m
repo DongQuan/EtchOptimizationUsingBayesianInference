@@ -1,5 +1,6 @@
+clear
+
 global massIon %ion mass
-global massElectron
 global kb %boltzmann constant
 global q %electron charge
 global R %radius of chamber
@@ -26,7 +27,7 @@ kb = 1.381e-23; %J/K
 q = 1.6022e-19; %C
 R = 0.15; %m
 L = 0.14; %m
-T = 303;
+T = 600;
 V = pi*R^2*L;
 A = 2*pi*R*L + 2*pi*R^2;
 K = 5e-14; %(m^3/s)
@@ -34,7 +35,7 @@ plasmaUnknowns = 25;
 sigma = 16.8e-24;
 noUnknowns = 15; %7 k's (A and B coeff) plus standard error
 %Calculate k9
-diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2)
+diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2);
 Df = diffusionLength/3*sqrt(8*kb*T/(pi*massIon)); %need to calculate effective diffusion coefficient
 recombinationProbability = (0.2+10e-3+0.05)/3;
 k9 = recombinationProbability*Df/(diffusionLength^2);
@@ -50,15 +51,14 @@ k6 = 2e-17;
 k8 = k2;
 noise = 10;
 expParameters = FactorialDesign();
-current = [k1 k2 k3  k4 k5 k6 k8 0 0 0 0 0 0 0 0];
-xmulti=zeros(25,10);
+current = [k1 k2 k3  k4 k5 k6 k8 2 5 6 10 18 5 8];
+xmulti=zeros(plasmaUnknowns,length(expParameters));
 predER = zeros(1,10);
-for trial=1:1
-    for expNo=1:1%length(expParameters)
-        xmulti(:,trial) = GlobalSolver(current,expNo);
-        %PredER(trial) = CalcEtchRate(xmulti(:,trial),expNo);
-    end
+for expNo=1:length(expParameters)
+        xmulti(:,expNo) = GlobalSolver(current,expNo);
+        PredER(expNo) = CalcEtchRate(xmulti(:,expNo),expNo);
 end
+
 %SyntheticDataWithNoise = SyntheticData + noise*randn(length(SyntheticData));
 
 

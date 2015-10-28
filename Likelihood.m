@@ -1,8 +1,11 @@
 function [F] = Likelihood(current)
 global data;
-L = 0;
+Like = 0;
 for i=1:length(data)
-    [sim] = GlobalSolver(current,i);
-    L = log(normpdf(data(i),sim,current(15))) + L;
+    [etchGuess] = GlobalSolver(current,i)
+    Like = normpdf(data(i),etchGuess,current(15));
+    if (Like~=0)
+        Like = log(Like)+Like;
+    end
 end
-F = L;
+F = Like

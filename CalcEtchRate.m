@@ -1,8 +1,8 @@
-function F = CalcEtchRate(plasmaVariables,expNo)
+function F = CalcEtchRate(x,expNo)
 global expParameters %ion mass
 global q
-expNo = 31;
 
+plasmaVariables = x;%Rescale(x,expNo);
 BiasFactor = expParameters(expNo,6);
 nCl2_pos = plasmaVariables(6);
 nCl_pos = plasmaVariables(7);

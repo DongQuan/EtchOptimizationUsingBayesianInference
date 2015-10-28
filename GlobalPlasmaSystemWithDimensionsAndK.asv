@@ -90,7 +90,7 @@ x(18)-(1+3*x(11)/x(12))/(1+x(11))*0.8/sqrt(4+R/(x(16)/lambdaMax)+(.8*R*(x(14)/vM
 (x(23)/kNorm) - Act(5)/kNorm*exp(-B(5)/x(9));%k5
 (x(24)/kNorm) - Act(6)/kNorm*exp(-B(6)/x(9));%k6
 (x(25)/kNorm) - Act(7)/kNorm*exp(-B(7)/x(9));
-x(9)/x(12)-TeV - (.5-TeV)/P];
-%x(26) - 6e+7*M/(Na*density_MgO)*(1-RxnProb*((x(2)/nNorm)*(x(14)/vMax))/(RxnProb*((x(2)/nNorm)*(x(14)/vMax)) + (B1*(sqrt((6*x(9)))-sqrt(eod)))*((x(14)/vMax)*((x(6)/nNorm)+(x(7)/nNorm)+(x(8)/nNorm)))))*(RxnProb*((x(2)/nNorm)*(x(14)/vMax))+(A1*(sqrt((6*x(9)))-sqrt(eos)))*((x(14)/vMax)*(x(8)/nNorm)))];%k8
+x(9)/x(12)-TeV - (.5-TeV)/P;
+x(26) - CalcEtchRate(Rescax,expNo)]%6e+7*M/(Na*density_MgO)*(1-RxnProb*((x(2)/nNorm)*(x(14)/vMax))/(RxnProb*((x(2)/nNorm)*(x(14)/vMax)) + (B1*(sqrt((6*x(9)))-sqrt(eod)))*((x(14)/vMax)*((x(6)/nNorm)+(x(7)/nNorm)+(x(8)/nNorm)))))*(RxnProb*((x(2)/nNorm)*(x(14)/vMax))+(A1*(sqrt((6*x(9)))-sqrt(eos)))*((x(14)/vMax)*(x(8)/nNorm)))];%k8
 
 end
