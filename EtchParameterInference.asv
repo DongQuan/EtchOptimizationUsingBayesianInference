@@ -103,7 +103,7 @@ current = [2.34E-16	1.13E-19	1.73E-17	2.70E-16	4.12E-19	2.33E-18	1.21E-19	5.5022
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 10;     % Number of samples (iterations)
+N       = ;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*noUnknowns,noUnknowns); 

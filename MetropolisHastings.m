@@ -1,7 +1,9 @@
 function [alpha, t, a, prob,PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,i)
 new = current;
 new(i) = ProposeParameters(i);   
+
 [PosteriorNew] = Posterior(new,i);
+
 % sampling from the proposal PDF with media the current state
 alpha = exp(PosteriorNew + ProposalPdf(current(i),new(i),i)-(PosteriorCurrent+ProposalPdf(new(i),current(i),i)));  % Ratio of the density at the candidate (theta_ast) and current (current) points
 if rand <= min(alpha,1)
