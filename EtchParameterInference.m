@@ -68,7 +68,7 @@ k9 = recombinationProbability*Df/(diffusionLength^2);
 allEtchRates = xlsread('SyntheticData.xlsx','EtchRates');
 allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
 trainingDataIndex = randperm(size(allEtchRates,1)+1);
-trainingDataIndex = trainingDataIndex(1:size(allEtchRates,1)/12)-1;
+trainingDataIndex = trainingDataIndex(1:size(allEtchRates,1)/6)-1;
 noTrainingCases = length(trainingDataIndex);
 noTestCases = size(allEtchRates,1) - noTrainingCases;
 trainingData = zeros(noTrainingCases,1);
@@ -93,17 +93,17 @@ expParameters = trainingExp; %cat(1,trainingExp,testExp);
 current = zeros(noUnknowns,1);
 
 for i = 1:noUnknowns
-     %current(i) = ProposeParameters(i);
+     current(i) = ProposeParameters(i);
 end
 
-current = [2.34E-16	1.13E-19	1.73E-17	2.70E-16	4.12E-19	2.33E-18	1.21E-19	5.502247949	5.297391123	3.862552087	4.102946538	54.31011931	8.675632081	3.320856533	7.35781683];
+%current = [2.34E-16	1.13E-19	1.73E-17	2.70E-16	4.12E-19	2.33E-18	1.21E-19	5.502247949	5.297391123	3.862552087	4.102946538	54.31011931	8.675632081	3.320856533	7.35781683];
 
 
 [PosteriorCurrent] = Posterior(current,1);
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 10;     % Number of samples (iterations)
+N       = 350;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*noUnknowns,noUnknowns); 
@@ -124,7 +124,7 @@ totalTime = tic;
 for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for j=1:noUnknowns % Cycle to make the thinning
+    for j=1:1 % Cycle to make the thinning
         SCtime = tic;
         [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
@@ -133,8 +133,8 @@ for cycle = 1:N  % Cycle to the number of samples
         index = index + 1;
         current = t;
         PosteriorCurrent = PosteriorCatch;
+        acc      = acc + a;  % Accepted ?
     end
-    acc      = acc + a;  % Accepted ?
     count = count+1;
     MHelapsed = toc(MHtime);
 end

@@ -15,7 +15,7 @@ global noUnknowns
 % %figure(2) 
 % %plot(x,y2)
 
-theta = xlsread('SyntheticData.xlsx','theta-k','A1:O2250');
+theta = xlsread('SyntheticData.xlsx','theta-50','A1:O750');
 for (i=1:noUnknowns)
     subplot(3,5,i)
     hist(theta(:,i)); 
