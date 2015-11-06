@@ -20,7 +20,7 @@ global expParameters
 global data
 global noExpParameters
 global noUnknowns
-global mean
+global center
 global sd
 
 
@@ -37,7 +37,7 @@ A = 2*pi*R*L + 2*pi*R^2;
 K = 5e-14; %(m^3/s)
 plasmaUnknowns = 25;
 sigma = 16.8e-24;
-noUnknowns = 15; %7 k's (A and B coeff) plus standard error
+noUnknowns = 1;%15; %7 k's (A and B coeff) plus standard error
 
 k7_nond = 5e-8;
 k1 = log(500);
@@ -54,8 +54,10 @@ k8 = k2;
 % k5 = 1e-16;
 % k6 = 2e-17;
 % k8 = k2;
-mean = [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
-sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1];
+center = log(2);
+sd = 1; 
+%center= [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
+%sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1];
 noExpParameters = 7;
 
 %Calculate k9
@@ -86,9 +88,9 @@ end
 %     end
 % end
 %assign training data and exp parameters to global variables
-data = trainingData;%cat(1,trainingData,testData);
+%data = trainingData;%cat(1,trainingData,testData);
 expParameters = trainingExp; %cat(1,trainingExp,testExp);
-
+data = exp(-5);
 %Make initial guess
 current = zeros(noUnknowns,1);
 
@@ -97,13 +99,14 @@ for i = 1:noUnknowns
 end
 
 %current = [2.34E-16	1.13E-19	1.73E-17	2.70E-16	4.12E-19	2.33E-18	1.21E-19	5.502247949	5.297391123	3.862552087	4.102946538	54.31011931	8.675632081	3.320856533	7.35781683];
-
-
+for test = 1:100
+    testK(test) = ProposeParameters(test);
+end
 [PosteriorCurrent] = Posterior(current,1);
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 350;     % Number of samples (iterations)
+N       = 500;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*noUnknowns,noUnknowns); 
@@ -118,7 +121,7 @@ EtchRateSetMode = zeros (1,length(trainingData));
 %     [t] = MetropolisHastings(current);
 % end
 count = 0;
-
+currentTest = 5;
 %Peform MH iterations
 totalTime = tic;
 for cycle = 1:N  % Cycle to the number of samples
@@ -126,12 +129,12 @@ for cycle = 1:N  % Cycle to the number of samples
     MHtime = tic;
     for j=1:1 % Cycle to make the thinning
         SCtime = tic;
-        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
+        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(currentTest,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
         theta(index,:) = t;        % Samples accepted
         AlphaSet(i,j) = alpha;
         index = index + 1;
-        current = t;
+        currentTest = t;
         PosteriorCurrent = PosteriorCatch;
         acc      = acc + a;  % Accepted ?
     end
