@@ -1,11 +1,16 @@
 function [alpha, t, a, prob,PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,i)
+global alphaRecord
 new = current;
-new(i) = ProposeParameters(i);   
-
+new(i) = ProposeParameters(i)
+[current]
+[new]
 [PosteriorNew] = Posterior(new,i);
-
+ProposalPdf(current,new,i);
+ProposalPdf(new,current,i);
+PosteriorCurrent;
 % sampling from the proposal PDF with media the current state
-alpha = exp(PosteriorNew + ProposalPdf(current(i),new(i),i)-(PosteriorCurrent+ProposalPdf(new(i),current(i),i)));  % Ratio of the density at the candidate (theta_ast) and current (current) points
+alpha = exp(PosteriorNew + ProposalPdf(current,new,i)-(PosteriorCurrent+ProposalPdf(new,current,i))) % Ratio of the density at the candidate (theta_ast) and current (current) points
+%alphaRecord = [alphaRecord alpha];
 if rand <= min(alpha,1)
    t    = new;        % Accept the candidate
    prob = min(alpha,1);     % Accept with probability min(alpha,1)

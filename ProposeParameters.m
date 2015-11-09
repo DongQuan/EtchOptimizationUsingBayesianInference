@@ -1,7 +1,8 @@
 function F = ProposeParameters(i)
 global center
 global sd
-parameter = lognrnd(center,sd);
+global proposedParameterRecord
+parameter = lognrnd(center(i),sd(i));
 %parameter = lognrnd(mean(i),sd(i));
 % kNorm = 10e+18;
 % %scale prexponential factor values back down
@@ -9,5 +10,6 @@ parameter = lognrnd(center,sd);
 %     parameter = parameter/kNorm;
 % end
 % %parameter = abs(parameter);
+proposedParameterRecord = [proposedParameterRecord parameter];
 F = parameter;
 end

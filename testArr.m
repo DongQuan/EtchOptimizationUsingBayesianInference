@@ -1,3 +1,3 @@
 function [F] = testArr(current)
-k = 1*exp(-current);
+k = current(1)*exp(-current(2));
 F = k;

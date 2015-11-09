@@ -22,7 +22,13 @@ global noExpParameters
 global noUnknowns
 global center
 global sd
-
+global proposalSigma
+global priorRecord
+global proposalRecord
+global posteriorRecord
+global alphaRecord
+global proposedParameterRecord
+global likelihoodRecord
 
 %define constants
 
@@ -37,7 +43,14 @@ A = 2*pi*R*L + 2*pi*R^2;
 K = 5e-14; %(m^3/s)
 plasmaUnknowns = 25;
 sigma = 16.8e-24;
-noUnknowns = 1;%15; %7 k's (A and B coeff) plus standard error
+noUnknowns = 2;%15; %7 k's (A and B coeff) plus standard error
+proposalSigma = [.2 .05];
+priorRecord = [];
+proposalRecord = [];
+posteriorRecord = [];
+alphaRecord = [];
+proposedParameterRecord = [];
+likelihoodRecord = [];
 
 k7_nond = 5e-8;
 k1 = log(500);
@@ -54,33 +67,33 @@ k8 = k2;
 % k5 = 1e-16;
 % k6 = 2e-17;
 % k8 = k2;
-center = log(2);
-sd = 1; 
+center = [log(3) log(2)];
+sd = [1 1]; 
 %center= [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
 %sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1];
 noExpParameters = 7;
-
-%Calculate k9
-diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2);
-Df = diffusionLength/3*sqrt(8*kb*T/(pi*massIon)); %need to calculate effective diffusion coefficient
-recombinationProbability = (0.2+10e-3+0.05)/3;
-k9 = recombinationProbability*Df/(diffusionLength^2);
-
-%Split data into training and test sets
-allEtchRates = xlsread('SyntheticData.xlsx','EtchRates');
-allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
-trainingDataIndex = randperm(size(allEtchRates,1)+1);
-trainingDataIndex = trainingDataIndex(1:size(allEtchRates,1)/6)-1;
-noTrainingCases = length(trainingDataIndex);
-noTestCases = size(allEtchRates,1) - noTrainingCases;
-trainingData = zeros(noTrainingCases,1);
-trainingExp = zeros(noTrainingCases,noExpParameters);
-testData = zeros(noTestCases,1);
-testExp = zeros(noTestCases,noExpParameters);
-for i=1:noTrainingCases
-    trainingData(i) = allEtchRates(trainingDataIndex(i));
-    trainingExp(i,:) = allExpParameters(trainingDataIndex(i),:);
-end
+% 
+% %Calculate k9
+% diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2);
+% Df = diffusionLength/3*sqrt(8*kb*T/(pi*massIon)); %need to calculate effective diffusion coefficient
+% recombinationProbability = (0.2+10e-3+0.05)/3;
+% k9 = recombinationProbability*Df/(diffusionLength^2);
+% 
+% %Split data into training and test sets
+% allEtchRates = xlsread('SyntheticData.xlsx','EtchRates');
+% allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
+% trainingDataIndex = randperm(size(allEtchRates,1)+1);
+% trainingDataIndex = trainingDataIndex(1:size(allEtchRates,1)/6)-1;
+% noTrainingCases = length(trainingDataIndex);
+% noTestCases = size(allEtchRates,1) - noTrainingCases;
+% trainingData = zeros(noTrainingCases,1);
+% trainingExp = zeros(noTrainingCases,noExpParameters);
+% testData = zeros(noTestCases,1);
+% testExp = zeros(noTestCases,noExpParameters);
+% for i=1:noTrainingCases
+%     trainingData(i) = allEtchRates(trainingDataIndex(i));
+%     trainingExp(i,:) = allExpParameters(trainingDataIndex(i),:);
+% end
 % for i=1:noTestCases
 %     if i~=(trainingDataIndex(i))
 %     testData(i) = allEtchRates(i);
@@ -89,60 +102,75 @@ end
 % end
 %assign training data and exp parameters to global variables
 %data = trainingData;%cat(1,trainingData,testData);
-expParameters = trainingExp; %cat(1,trainingExp,testExp);
-data = exp(-5);
+% expParameters = trainingExp; %cat(1,trainingExp,testExp);
+data = 5*exp(-5);
+%% SECTION TITLE
+% DESCRIPTIVE TEXT
 %Make initial guess
 current = zeros(noUnknowns,1);
-
 for i = 1:noUnknowns
-     current(i) = ProposeParameters(i);
+      current(i) = ProposeParameters(i);
 end
-
+%current(1) = 7e-12;
+%current(2) = 7;
 %current = [2.34E-16	1.13E-19	1.73E-17	2.70E-16	4.12E-19	2.33E-18	1.21E-19	5.502247949	5.297391123	3.862552087	4.102946538	54.31011931	8.675632081	3.320856533	7.35781683];
-for test = 1:100
-    testK(test) = ProposeParameters(test);
-end
-[PosteriorCurrent] = Posterior(current,1);
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 500;     % Number of samples (iterations)
+N       = 5000;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*noUnknowns,noUnknowns); 
-acc = 0;
+acc = zeros(noUnknowns,1);
 
 %initialize plasma arrays
 AlphaSet = zeros(N,noUnknowns);
-EtchRateSetMean = zeros(1, length(trainingData));
-TestEtchRateSetMean = zeros(1, length(testData));
-EtchRateSetMode = zeros (1,length(trainingData));
+% EtchRateSetMean = zeros(1, length(trainingData));
+% TestEtchRateSetMean = zeros(1, length(testData));
+% EtchRateSetMode = zeros (1,length(trainingData));
 % for i = 1:burnin    % First make the burn-in stage
 %     [t] = MetropolisHastings(current);
 % end
 count = 0;
-currentTest = 5;
+[PosteriorCurrent] = Posterior(current,2);
 %Peform MH iterations
 totalTime = tic;
+% new = current;
+% for t = 1:2
+% for i=2:2
+% new(i) = ProposeParameters(i);
+% [PosteriorCurrent]
+% [PosteriorNew] = Posterior(new,i)
+% [n1]= PosteriorNew + ProposalPdf(current,new,i)
+% [n2]=PosteriorCurrent+ProposalPdf(new,current,i)
+% [p1] = ProposalPdf(current,new,i)
+% [p2] = ProposalPdf(new,current,i)
+% % sampling from the proposal PDF with media the current state
+% alpha = exp(PosteriorNew + ProposalPdf(current,new,i)-(PosteriorCurrent+ProposalPdf(new,current,i))) % Ratio of the density at the candidate (theta_ast) and current (current) points
+% end
+% end
+
+
+
 for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for j=1:1 % Cycle to make the thinning
+    for j=1:noUnknowns % Cycle to make the thinning
         SCtime = tic;
-        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(currentTest,PosteriorCurrent,j);
+        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
         theta(index,:) = t;        % Samples accepted
-        AlphaSet(i,j) = alpha;
+        AlphaSet(cycle,j) = alpha;
         index = index + 1;
-        currentTest = t;
+        current = t;
         PosteriorCurrent = PosteriorCatch;
-        acc      = acc + a;  % Accepted ?
+        acc(j) = acc(j) + a;  % Accepted ?
     end
     count = count+1;
     MHelapsed = toc(MHtime);
 end
 totalTimElapsed = toc(totalTime);
-% accrate = acc/N;     % Acceptance rate
+accrate = acc/N;     % Acceptance rate
 % hf2 = mode(theta);
 % hfmean = zeros(1,NoUnknowns);
 % for i = 1:NoUnknowns
