@@ -1,4 +1,4 @@
-function [etchRate,xFinal] = GlobalSolver(current,expNo)
+function [etchRate,xFinal,exitflag] = GlobalSolver(current,expNo)
 %Test function for global plasma system
 %All SI units (m)
 
@@ -208,7 +208,7 @@ end
 tpoints = CustomStartPointSet(startPoints);
 MS = MultiStart;
 %gs = GlobalSearch(ms,'NumTrialPoints',1000,'TolX',10e-20);
-[x, f] = run(MS,problem,tpoints);
+[x,fval,exitflag]  = run(MS,problem,tpoints);
 
 %[xg,gf,exitflag,output,solutions]=run(gs,problem)
 %x = fmincon(@(x)0,x0,[],[],[],[],l,u,@(x)fminconstr(x,Act,B,expNo),opts);
