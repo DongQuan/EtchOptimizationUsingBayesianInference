@@ -1,4 +1,4 @@
-function F = GlobalSolver(current,expNo)
+function [etchRate,xFinal] = GlobalSolver(current,expNo)
 %Test function for global plasma system
 %All SI units (m)
 
@@ -150,14 +150,19 @@ l(12) = 1;
 %l(2) = nCl;
 u = Inf(plasmaUnknowns,1);
 %l(9) = Te;
+u(1) = 1;
+u(2) = 1;%nCl;
+u(3) = 1;
+u(4) = 1/1000;
 u(5) = 1/1000;
 u(6) = 1/1000;
 u(7) = 1/1000;
 u(8) = 1/1000;
-u(9) = 10;
+u(9) = 5;
 u(10) = 4;
-u(14) = v/vMax;
-u(2) = 1;%nCl;
+u(14) = 1;
+u(16) = 1/(1/(sigma*n0));
+
 % l(19) = k1;
 % l(20) = k2;
 % l(21) = k3;
@@ -182,7 +187,7 @@ u(2) = 1;%nCl;
 %u(26) = 200;
 opts = optimoptions(@fmincon,'TolCon',10e-3,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-6);
 problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
-trials = ;
+trials = 20;
 startPoints = zeros(trials,plasmaUnknowns);
 for i=1:trials
     for n=1:8
@@ -209,4 +214,4 @@ MS = MultiStart;
 xFinal = Rescale(x,expNo);
 etchRate = CalcEtchRate(xFinal,expNo);
 
-F = etchRate;
+%F = [etchRate,xFinal];

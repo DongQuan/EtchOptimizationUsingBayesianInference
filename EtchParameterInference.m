@@ -29,6 +29,7 @@ global posteriorRecord
 global alphaRecord
 global proposedParameterRecord
 global likelihoodRecord
+global etchRecord
 
 %define constants
 
@@ -51,6 +52,7 @@ posteriorRecord = [];
 alphaRecord = [];
 proposedParameterRecord = [];
 likelihoodRecord = [];
+etchRecord = [];
 
 k7_nond = 5e-8;
 k1 = log(500);
@@ -60,17 +62,10 @@ k4 = log(5000);
 k5 = log(5);
 k6 = log(50);
 k8 = k2;
-% k1 = 3e-16;
-% k2 = 2.1e-18;
-% k3 = 1.5e-16;
-% k4 = 3e-15;
-% k5 = 1e-16;
-% k6 = 2e-17;
-% k8 = k2;
 center= [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
 sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1];
 noExpParameters = 7;
-
+subBlocks = 3;
 %Calculate k9
 diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2);
 Df = diffusionLength/3*sqrt(8*kb*T/(pi*massIon)); %need to calculate effective diffusion coefficient
@@ -78,7 +73,6 @@ recombinationProbability = (0.2+10e-3+0.05)/3;
 k9 = recombinationProbability*Df/(diffusionLength^2);
 
 %Split data into training and test sets
-allEtchRates = xlsread('SyntheticData.xlsx','EtchRates');
 allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
 trainingDataIndex = randperm(size(allEtchRates,1)+1);
 trainingDataIndex = trainingDataIndex(1:size(allEtchRates,1)/6)-1;
@@ -105,25 +99,26 @@ end
 
 %Make initial guess
 current = zeros(noUnknowns,1);
-for i = 1:noUnknowns
-      current(i) = ProposeParameters(i);
+for i = 1:subBlocks
+      current = ProposeParameters(current,i);
 end
 %current(1) = 7e-12;
 %current(2) = 7;
 %current = [2.34E-16	1.13E-19	1.73E-17	2.70E-16	4.12E-19	2.33E-18	1.21E-19	5.502247949	5.297391123	3.862552087	4.102946538	54.31011931	8.675632081	3.320856533	7.35781683];
 %set experiments to training data
-expParameters = trainingExp;
-data = trainingData;
+
+
+data = realValues;
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
 N       = 100;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
-theta   = zeros(N*noUnknowns,noUnknowns); 
-acc = zeros(noUnknowns,1);
+theta   = zeros(N*subBlocks,noUnknowns); 
+acc = zeros(subBlocks,1);
 
 %initialize plasma arrays
-AlphaSet = zeros(N,noUnknowns);
+AlphaSet = zeros(N,subBlocks);
 % EtchRateSetMean = zeros(1, length(trainingData));
 % TestEtchRateSetMean = zeros(1, length(testData));
 % EtchRateSetMode = zeros (1,length(trainingData));
@@ -131,14 +126,14 @@ AlphaSet = zeros(N,noUnknowns);
 %     [t] = MetropolisHastings(current);
 % end
 count = 0;
-[PosteriorCurrent] = Posterior(current,2);
+[PosteriorCurrent] = Posterior(current,1);
 %Peform MH iterations
 totalTime = tic;
 
 for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for j=1:noUnknowns % Cycle to make the thinning
+    for j=1:2 % Cycle to make the thinning
         SCtime = tic;
         [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
@@ -158,38 +153,25 @@ accrate = acc/N;     % Acceptance rate
 % hfmean = zeros(1,NoUnknowns);
 % for i = 1:NoUnknowns
 %     hfmean(i) = sum(theta(:,i))/N;
-% end
-% for j = 1:length(TrainingData)
-%          EtchRateSetMean(j) = SimEtch(hfmean,j,expected);
-% end
-% ind = 1;
-% for j = length(TrainingData)+1:length(TrainingData)+length(TestData)
-%          TestEtchRateSetMean(ind) = SimEtch(hfmean,j,expected);
-%          ind = ind +1;
-% end
-% figure(1)
-% x = linspace(1,length(TrainingData),length(TrainingData));
-% scatter(x,EtchRateSetMean)
-% hold on
-% scatter(x,TrainingData,'g')
-% print('-f1','EtchSimulation','-dpng')
-% fid = fopen('theta.txt', 'wt'); % Open for writing
-% for i=1:size(theta,1)
-%    fprintf(fid, '%d ', theta(i,:));
-%    fprintf(fid, '\n');
-% end
-% fclose(fid);
-% 
-% %Test set
-% figure(2)
-% x = linspace(1,length(TestData),length(TestData));
-% scatter(x,TestEtchRateSetMean)
-% hold on
-% scatter(x,TestData,'g')
-% print('-f1','EtchPrediction','-dpng')
-% fid = fopen('theta.txt', 'wt'); % Open for writing
-% for i=1:size(theta,1)
-%    fprintf(fid, '%d ', theta(i,:));
-%    fprintf(fid, '\n');
-% end
-%fclose(fid);
+
+simTrainingData = zeros(length(trainingData),1);
+for i=1:length(data)
+    [simTrainingData(i),simPlasmaParams(:,i)] = GlobalSolver(mean(theta),i);
+end
+figure(1)
+x = linspace(1,length(trainingData),length(trainingData));
+scatter(x,simTrainingData,'r')
+hold on
+scatter(x,realValues,'g')
+expParameters = testExp;
+for i=1:length(testExp)
+    [realTestValues(i),realtestPlasmaParams(:,i)]= GlobalSolver(real,i);
+    [simTestData(i),simTestPlasmaParams(:,i)] = GlobalSolver(mean(theta),i);
+end
+
+figure(2)
+x = linspace(1,length(testData),length(testData));
+scatter(x,simTestData,'r')
+hold on
+scatter(x,realTestValues,'g')
+

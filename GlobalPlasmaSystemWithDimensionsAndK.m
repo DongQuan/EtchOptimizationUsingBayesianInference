@@ -48,7 +48,7 @@ TeV =  8.621738*10e-5 *T;
 %lambda_max*vmax. 19 - 25 normalized by K
 
 lambdaMax = 1/(1/(sigma*n0));
-maxTe = 25;
+maxTe = 10;
 vMax = 1/(sqrt(q*maxTe/massIon));
 DMax = lambdaMax*vMax;
 kNorm = 1/(10e-18);
