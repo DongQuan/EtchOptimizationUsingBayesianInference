@@ -83,33 +83,46 @@ k8 = k2;
 
 %Priors
 center= [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
-sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1];
+sd = ones(15)*10;
 
-%Generate synthetic data
+load synthetic
+load allExpParameters
+%sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1];
+
+% %Generate synthetic data
 allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
-expParameters = allExpParameters;
-synthetic = zeros(length(allExpParameters),1);
-syntheticWithNoise = zeros(length(allExpParameters),1);
-exitflag = zeros(length(allExpParameters),1);
-syntheticPlasmaParams = zeros(plasmaUnknowns,length(allExpParameters));
-%Calculate synthetic experiments
-for i=1:length(allExpParameters)
-    [synthetic(i),syntheticPlasmaParams(:,i),exitflag(i)]= GlobalSolver(real,i);
-end
-%Add noise to synthetic experiments
-for i=1:length(allExpParameters)
-    syntheticWithNoise(i) = synthetic(i) + normrnd(0,expError);
-end
+% expParameters = allExpParameters;
+% synthetic = zeros(length(allExpParameters),1);
+% syntheticWithNoise = zeros(length(allExpParameters),1);
+% exitflag = zeros(length(allExpParameters),1);
+% syntheticPlasmaParams = zeros(plasmaUnknowns,length(allExpParameters));
+% % Calculate synthetic experiments
+% for i=1:length(allExpParameters)
+%     [synthetic(i),syntheticPlasmaParams(:,i),exitflag(i)]= GlobalSolver(real,i);
+% end
+% %Add noise to synthetic experiments
+% for i=1:length(allExpParameters)
+%     syntheticWithNoise(i) = synthetic(i) + normrnd(0,expError);
+% end
+% 
 
-
-
-
-
+%Removes unrealistic etch rates
+% index = 1;
+% remove = [];
+% for i = 1:length(synthetic)
+%     if(synthetic(i)>.5e+9)
+%         remove(index) = i;
+%         index = index+1;
+%     end
+% end
+% synthetic(remove,:) = [];
+% allExpParameters(remove,:) = [];
+%load allExpParameters
 %Split data into training and test sets
-trainingDataIndex = randperm(size(allEtchRates,1)+1);
-trainingDataIndex = trainingDataIndex(1:size(allEtchRates,1)/6)-1;
+trainingDataIndex = randperm(size(synthetic,1)+1);
+trainingDataIndex = trainingDataIndex(1:size(synthetic,1)/6)-1;
 noTrainingCases = length(trainingDataIndex);
-noTestCases = size(allEtchRates,1) - noTrainingCases;
+noTestCases = size(synthetic,1) - noTrainingCases;
 trainingData = zeros(noTrainingCases,1);
 trainingExp = zeros(noTrainingCases,noExpParameters);
 testData = [];
@@ -118,7 +131,7 @@ for i=1:noTrainingCases
     trainingData(i) = synthetic(trainingDataIndex(i));
     trainingExp(i,:) = allExpParameters(trainingDataIndex(i),:);
 end
-Lia = ismember(allEtchRates,trainingData);
+Lia = ismember(synthetic,trainingData);
 for i=1:length(Lia)
     if ~(Lia(i))
         testData = [testData synthetic(i)];
@@ -129,8 +142,11 @@ end
 
 %Make initial guess for unknown parameters
 current = zeros(noUnknowns,1);
-for i = 1:subBlocks
-      current = ProposeParameters(current,i);
+for m = 1:2
+    for i = 1:subBlocks
+          current = ProposeParameters(current,i);
+    end
+    etchCheck(m) = GlobalSolver(current,1);
 end
 
 %set experiments to training data
@@ -176,9 +192,9 @@ accrate = acc/N;     % Acceptance rate
 
 %simulate training data
 simTrainingData = zeros(length(trainingData),1);
-simPlasmaParams = zeros(length(trainingData),1);
+simPlasmaParams = zeros(plasmaUnknowns,length(trainingData));
 for i=1:length(data)
-    [simTrainingData(i),simPlasmaParams(:,i)] = GlobalSolver(mean(theta),i);
+    [simTrainingData(i),simPlasmaParams(:,i),exitflag(i)] = GlobalSolver(mean(theta),i);
 end
 figure(1)
 x = linspace(1,length(trainingData),length(trainingData));
@@ -189,9 +205,9 @@ scatter(x,trainingData,'g')
 %Simulate test data
 expParameters = testExp;
 simTestData = zeros(length(testData),1);
-simTestPlasmaParams = zeros(length(testData),1);
+simTestPlasmaParams = zeros(plasmaUnknowns,length(testData));
 for i=1:length(testExp)
-    [simTestData(i),simTestPlasmaParams(:,i)] = GlobalSolver(mean(theta),i);
+    [simTestData(i),simTestPlasmaParams(:,i),extiflag] = GlobalSolver(mean(theta),i);
 end
 
 figure(2)
