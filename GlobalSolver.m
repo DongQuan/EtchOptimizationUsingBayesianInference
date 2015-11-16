@@ -95,7 +95,7 @@ u(15) = 1;
 u(16) = 1;
 
 
-opts = optimoptions(@fmincon,'TolCon',10e-3,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-7);
+opts = optimoptions(@fmincon,'TolCon',10e-3,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-6);
 problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
 trials = 20;
 startPoints = zeros(trials,plasmaUnknowns);

@@ -30,6 +30,7 @@ global alphaRecord
 global proposedParameterRecord
 global likelihoodRecord
 global etchRecord
+global proposalSD
 
 %define constants
 massIon = 35.45*(1.660568e-27); %kg
@@ -45,6 +46,7 @@ plasmaUnknowns = 25;
 sigma = 16.8e-24;
 noUnknowns = 15; %7 k's (A and B coeff) plus standard error
 noExpParameters = 7;
+proposalSD = [5 1 3];
 subBlocks = 3;
 %Calculate k9
 diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2);
@@ -87,8 +89,10 @@ sd = ones(15)*10;
 
 load synthetic
 load allExpParameters
-%sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1];
-
+%sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1
+for i=1:length(synthetic)
+synthetic(i) = synthetic(i) + (-.1 + (1--1).*rand(1,1)synthetic(i);
+end
 % %Generate synthetic data
 allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
 % expParameters = allExpParameters;
@@ -142,11 +146,9 @@ end
 
 %Make initial guess for unknown parameters
 current = zeros(noUnknowns,1);
-for m = 1:2
-    for i = 1:subBlocks
+
+for i = 1:subBlocks
           current = ProposeParameters(current,i);
-    end
-    etchCheck(m) = GlobalSolver(current,1);
 end
 
 %set experiments to training data
@@ -155,7 +157,7 @@ data = trainingData;
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 100;     % Number of samples (iterations)
+N       = 10;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*subBlocks,noUnknowns); 
@@ -192,7 +194,7 @@ accrate = acc/N;     % Acceptance rate
 
 %simulate training data
 simTrainingData = zeros(length(trainingData),1);
-simPlasmaParams = zeros(length(trainingData),1);
+simPlasmaParams = zeros(plasmaUnknowns,length(trainingData));
 for i=1:length(data)
     [simTrainingData(i),simPlasmaParams(:,i),exitflag(i)] = GlobalSolver(mean(theta),i);
 end
@@ -205,7 +207,7 @@ scatter(x,trainingData,'g')
 %Simulate test data
 expParameters = testExp;
 simTestData = zeros(length(testData),1);
-simTestPlasmaParams = zeros(length(testData),1);
+simTestPlasmaParams = zeros(plasmaUnknowns,length(testData));
 for i=1:length(testExp)
     [simTestData(i),simTestPlasmaParams(:,i),extiflag] = GlobalSolver(mean(theta),i);
 end
