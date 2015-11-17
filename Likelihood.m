@@ -4,7 +4,7 @@ global likelihoodRecord
 global etchRecord
 likeData = 0;
 likelihoodTime = tic;
-noise = 40; %change this back to unknown noise parameter eventually
+noise = current(15); %change this back to unknown noise parameter eventually
 
 for i=1:length(data)
     [etchGuess] = GlobalSolver(current,i);

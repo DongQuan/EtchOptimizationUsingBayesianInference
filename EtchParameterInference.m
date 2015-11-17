@@ -85,7 +85,8 @@ k8 = k2;
 
 %Priors
 center= [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
-sd = ones(15)*10;
+sd = ones(15);
+sd(15) = 5;
 
 load synthetic
 load allExpParameters
@@ -157,7 +158,7 @@ data = trainingData;
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 2;     % Number of samples (iterations)
+N       = 1;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*subBlocks,noUnknowns); 
@@ -174,7 +175,7 @@ totalTime = tic;
 for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for j=1:2 % Cycle to make the thinning
+    for j=1:3 % Cycle to make the thinning
         SCtime = tic;
         [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
