@@ -3,7 +3,7 @@ function [alpha, t, a, prob,PosteriorCatch] = MetropolisHastings(current,Posteri
 %unused blocks of parameters)
 new = ProposalFunction(current,subBlock);
 [PosteriorNew] = Posterior(new,subBlock);
-[alpha] = exp(PosteriorNew + ProposalPdf(current,new,subBlock)-(PosteriorCurrent+ProposalPdf(new,current,subBlock))) % Ratio of the density at the candidate (theta_ast) and current (current) points
+[alpha] = exp(PosteriorNew + ProposalPdf(current,new,subBlock)-(PosteriorCurrent+ProposalPdf(new,current,subBlock))); % Ratio of the density at the candidate (theta_ast) and current (current) points
 if rand <= min(alpha,1)
    t    = new;        % Accept the candidate
    prob = min(alpha,1);     % Accept with probability min(alpha,1)

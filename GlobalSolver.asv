@@ -95,10 +95,10 @@ u(15) = 1;
 u(16) = 1;
 
 
+opts = optimoptions(@fmincon,'TolCon',10e-3,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-6);
+problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
 trials = 20;
 startPoints = zeros(trials,plasmaUnknowns);
-tpoints = CustomStartPointSet(startPoints);
-
 for i=1:trials
     for n=1:8
         startPoints(i,n) = 1/i+10e-4;%unifrnd(10e-3,1000);
@@ -112,22 +112,14 @@ for i=1:trials
         startPoints(i,n) = 1000/i+10e-5;%unifrnd(10e-5,10);
     end
 end
-
+tpoints = CustomStartPointSet(startPoints);
 MS = MultiStart;
-exitflag = -2;
-tc = 10e-4;
-while (exitflag==-2)
-    opts = optimoptions(@fmincon,'TolCon',tc,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-6);
-    problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
-    [x,fval,exitflag]  = run(MS,problem,tpoints);
-    tc = tc*10;
-    exitflag
-end
+[x,fval,exitflag]  = run(MS,problem,tpoints);
 xFinal = Rescale(x,expNo);
-%if exitflag==2
+if exitflag==2
 etchRate = CalcEtchRate(xFinal,expNo);
-% else
-%    etchRate = 10e+8; %picking unrealistic values so that these parameters are not chosen
-% end
+else
+   etchRate = 10e+8; %picking unrealistic values so that these parameters are not chosen
+end
 
 %F = [etchRate,xFinal];

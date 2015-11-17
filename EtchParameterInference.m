@@ -157,7 +157,7 @@ data = trainingData;
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 10;     % Number of samples (iterations)
+N       = 2;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N*subBlocks,noUnknowns); 
