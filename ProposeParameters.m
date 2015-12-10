@@ -1,20 +1,21 @@
 function F = ProposeParameters(new,subBlock)
-global center
-global sd
+global proposalCenter
+global proposalSD
 global proposedParameterRecord
+global kNorm
 parameter = new;
-kNorm = 10e+18;
+
 if subBlock == 1
-    for index = 1:7
-        parameter(index) = lognrnd(center(index),sd(index));
+    for index = 1:1
+        parameter(index) = lognrnd(proposalCenter(index),proposalSD(index));
         parameter(index) = parameter(index)/kNorm;
     end
 elseif subBlock == 2
-    for actIndex = 8:14
-        parameter(actIndex) = lognrnd(center(actIndex),sd(actIndex));
+    for actIndex = 2:2
+        parameter(actIndex) = lognrnd(proposalCenter(actIndex),proposalSD(actIndex));
     end
 else
-     parameter(15) = lognrnd(center(15),sd(15));
+     parameter(3) = lognrnd(proposalCenter(3),proposalSD(3));
 end
 
 proposedParameterRecord = [proposedParameterRecord parameter];

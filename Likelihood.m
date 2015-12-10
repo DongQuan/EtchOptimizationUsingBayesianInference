@@ -4,12 +4,12 @@ global likelihoodRecord
 global etchRecord
 likeData = 0;
 likelihoodTime = tic;
-noise = current(15); %change this back to unknown noise parameter eventually
+noise = current(3); %change this back to unknown noise parameter eventually
 
 for i=1:length(data)
-    [etchGuess] = GlobalSolver(current,i);
+    [etchGuess] = testArr(current,i);
     etchRecord = [etchRecord etchGuess]
-    Like = normpdf(data(i),etchGuess,noise) + 10e-20;
+    Like = lognpdf(data(i),etchGuess,noise) + 10e-20;
     likeData = log(Like) + likeData;
 end
 likelihoodRecord = [likelihoodRecord likeData];

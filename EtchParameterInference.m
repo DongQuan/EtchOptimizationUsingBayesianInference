@@ -44,9 +44,12 @@ A = 2*pi*R*L + 2*pi*R^2;
 K = 5e-14; %(m^3/s)
 plasmaUnknowns = 25;
 sigma = 16.8e-24;
-noUnknowns = 15; %7 k's (A and B coeff) plus standard error
+noUnknowns = 3; %7 k's (A and B coeff) plus standard error
 noExpParameters = 7;
-proposalSD = [5 1 3];
+global proposalCenter;
+global kNorm
+
+kNorm = 10e+10;
 subBlocks = 3;
 %Calculate k9
 diffusionLength = sqrt(1/(2.405/R)^2+(pi/L)^2);
@@ -63,105 +66,125 @@ proposedParameterRecord = [];
 likelihoodRecord = [];
 etchRecord = [];
 
-%Define real values for unknowns to generate syntehtic data
-r1 = 3e-16;
-r2 = 2.1e-18;
-r3 = 1.5e-16;
-r4 = 3e-15;
-r5 = 1e-16;
-r6 = 2e-17;
-r8 = r2;
-expError = 10;
-real = [r1 r2 r3  r4 r5 r6 r8 2 5 6 10 18 5 8 5];
-
-%initial guesses for Metropolis Hastings
-k1 = log(500);
-k2 = log(5);
-k3 = log(500);
-k4 = log(5000);
-k5 = log(5);
-k6 = log(50);
-k8 = k2;
-
-%Priors
-center= [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
-sd = ones(15);
-sd(15) = 5;
-
-load synthetic
-load allExpParameters
-%sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1
-for i=1:length(synthetic)
-synthetic(i) = synthetic(i) + (-.05 + (.05+.05).*rand(1,1))*synthetic(i);
+%Test Arrhenius parameters
+testr1 = 13e-12;
+testr2 = 5;
+error = .1;
+real = [testr1 testr2 error];
+center = [.8 5 1];
+sd = [.5 2 .25]
+%sd = ones(15,1)*.25;
+for i = 1:length(center)
+    m = center(i);
+    v = sd(i)^2;
+    proposalSD(i) = sqrt(log(v/(m^2)+1));
+    proposalCenter(i) = log((m^2)/sqrt(v+m^2));
 end
-% %Generate synthetic data
-allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
-% expParameters = allExpParameters;
-% synthetic = zeros(length(allExpParameters),1);
-% syntheticWithNoise = zeros(length(allExpParameters),1);
-% exitflag = zeros(length(allExpParameters),1);
-% syntheticPlasmaParams = zeros(plasmaUnknowns,length(allExpParameters));
-% % Calculate synthetic experiments
-% for i=1:length(allExpParameters)
-%     [synthetic(i),syntheticPlasmaParams(:,i),exitflag(i)]= GlobalSolver(real,i);
-% end
-% %Add noise to synthetic experiments
-% for i=1:length(allExpParameters)
-%     syntheticWithNoise(i) = synthetic(i) + normrnd(0,expError);
-% end
+%X = lognrnd(proposalCenter(2),proposalSD(2),1,30)
+% %Define real values for unknowns to generate syntehtic data
+% r1 = 3e-16;
+% r2 = 2.1e-18;
+% r3 = 1.5e-16;
+% r4 = 3e-15;
+% r5 = 1e-16;
+% r6 = 2e-17;
+% r8 = r2;
+% expError = 10;
+% real = [r1 r2 r3  r4 r5 r6 r8 2 5 6 10 18 5 8 5];
 % 
-
-%Removes unrealistic etch rates
-% index = 1;
-% remove = [];
-% for i = 1:length(synthetic)
-%     if(synthetic(i)>.5e+9)
-%         remove(index) = i;
-%         index = index+1;
+% %initial guesses for Metropolis Hastings
+% k1 = log(500);
+% k2 = log(5);
+% k3 = log(500);
+% k4 = log(5000);
+% k5 = log(5);
+% k6 = log(50);
+% k8 = k2;
+% 
+% %Priors
+% center= [k1 k2 k3  k4 k5 k6 k8 log(5) log(5) log(5) log(5) log(5) log(5) log(5) log(10)];
+% sd = ones(15);
+% sd(15) = 5;
+% 
+% load synthetic
+% load allExpParameters
+% %sd = [1 1 1 1 1 1 1 .7 .7 .7 .7 .7 .7 .7 1
+% for i=1:length(synthetic)
+% synthetic(i) = synthetic(i) + (-.05 + (.05+.05).*rand(1,1))*synthetic(i);
+% end
+% % %Generate synthetic data
+% allExpParameters = xlsread('SyntheticData.xlsx','ExpParameters');
+% % expParameters = allExpParameters;
+% % synthetic = zeros(length(allExpParameters),1);
+% % syntheticWithNoise = zeros(length(allExpParameters),1);
+% % exitflag = zeros(length(allExpParameters),1);
+% % syntheticPlasmaParams = zeros(plasmaUnknowns,length(allExpParameters));
+% % % Calculate synthetic experiments
+% % for i=1:length(allExpParameters)
+% %     [synthetic(i),syntheticPlasmaParams(:,i),exitflag(i)]= GlobalSolver(real,i);
+% % end
+% % %Add noise to synthetic experiments
+% % for i=1:length(allExpParameters)
+% %     syntheticWithNoise(i) = synthetic(i) + normrnd(0,expError);
+% % end
+% % 
+% 
+% %Removes unrealistic etch rates
+% % index = 1;
+% % remove = [];
+% % for i = 1:length(synthetic)
+% %     if(synthetic(i)>.5e+9)
+% %         remove(index) = i;
+% %         index = index+1;
+% %     end
+% % end
+% % synthetic(remove,:) = [];
+% % allExpParameters(remove,:) = [];
+% %load allExpParameters
+% %Split data into training and test sets
+% trainingDataIndex = randperm(size(synthetic,1)+1);
+% trainingDataIndex = trainingDataIndex(1:size(synthetic,1)/6)-1;
+% noTrainingCases = length(trainingDataIndex);
+% noTestCases = size(synthetic,1) - noTrainingCases;
+% trainingData = zeros(noTrainingCases,1);
+% trainingExp = zeros(noTrainingCases,noExpParameters);
+% testData = [];
+% testExp = [];
+% for i=1:noTrainingCases
+%     trainingData(i) = synthetic(trainingDataIndex(i));
+%     trainingExp(i,:) = allExpParameters(trainingDataIndex(i),:);
+% end
+% Lia = ismember(synthetic,trainingData);
+% for i=1:length(Lia)
+%     if ~(Lia(i))
+%         testData = [testData synthetic(i)];
+%         testExp = [testExp; allExpParameters(i,:)];
 %     end
 % end
-% synthetic(remove,:) = [];
-% allExpParameters(remove,:) = [];
-%load allExpParameters
-%Split data into training and test sets
-trainingDataIndex = randperm(size(synthetic,1)+1);
-trainingDataIndex = trainingDataIndex(1:size(synthetic,1)/6)-1;
-noTrainingCases = length(trainingDataIndex);
-noTestCases = size(synthetic,1) - noTrainingCases;
-trainingData = zeros(noTrainingCases,1);
-trainingExp = zeros(noTrainingCases,noExpParameters);
-testData = [];
-testExp = [];
-for i=1:noTrainingCases
-    trainingData(i) = synthetic(trainingDataIndex(i));
-    trainingExp(i,:) = allExpParameters(trainingDataIndex(i),:);
-end
-Lia = ismember(synthetic,trainingData);
-for i=1:length(Lia)
-    if ~(Lia(i))
-        testData = [testData synthetic(i)];
-        testExp = [testExp; allExpParameters(i,:)];
-    end
-end
-
-
+% 
+%Generate Test synthetic Data
+x = linspace(1,10,5)
 %Make initial guess for unknown parameters
 current = zeros(noUnknowns,1);
-
-for i = 1:subBlocks
+for i = 1:2
           current = ProposeParameters(current,i);
 end
-
-%set experiments to training data
+trainingExp = x;
 expParameters = trainingExp;
+trainingData = zeros(length(trainingExp),1)
+for i=1:length(trainingExp)
+    trainingData(i) = testArr(real,i); 
+end
+%set experiments to training data
+
 data = trainingData;
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 1;     % Number of samples (iterations)
+N       = 500;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
-theta   = zeros(N*subBlocks,noUnknowns); 
+theta   = zeros(N*2,noUnknowns); 
 acc = zeros(subBlocks,1);
 [PosteriorCurrent] = Posterior(current,1);
 count = 0;
@@ -172,10 +195,11 @@ AlphaSet = zeros(N,subBlocks);
 % end
 %Peform MH iterations
 totalTime = tic;
+current(3) = .1;
 for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for j=1:3 % Cycle to make the thinning
+    for j=1:2 % Cycle to make the thinning
         SCtime = tic;
         [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
@@ -192,7 +216,40 @@ end
 totalTimElapsed = toc(totalTime);
 accrate = acc/N;     % Acceptance rate
 
+for i =1:noUnknowns
+    figure; hist(theta(:,i),100)
+end
+draws = 1000;
+param = zeros(1,3);
+param(3) = 3;
 
+for i =1:length(expParameters)
+    pred(i) = testArr(mean(theta),i);
+end
+for i =1:length(expParameters)
+    for j = 1:draws
+        param(1) = theta(round(rand(1)*N),1);
+        param(2) = theta(round(rand(1)*N),2);
+        pred(j,i) = testArr(param,i);
+    end
+end
+
+figure;
+subplot(2,3,1);
+hist(pred(:,1),100)
+subplot(2,3,2),100;
+hist(pred(:,2))
+subplot(2,3,3);
+hist(pred(:,3))
+subplot(2,3,4);
+hist(pred(:,4))
+subplot(2,3,5);
+hist(pred(:,5))
+
+figure; scatter(x,pred);hold on; scatter(x,data,'g')
+xlabel('Training Experiment')
+ylabel('Output')
+title('N = 500, Experiments with Known Error')
 %simulate training data
 simTrainingData = zeros(length(trainingData),1);
 simPlasmaParams = zeros(plasmaUnknowns,length(trainingData));
@@ -218,4 +275,5 @@ x = linspace(1,length(testData),length(testData));
 scatter(x,simTestData,'r')
 hold on
 scatter(x,testData,'g')
+
 

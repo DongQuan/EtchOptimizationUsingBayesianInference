@@ -115,7 +115,7 @@ end
 
 MS = MultiStart;
 exitflag = -2;
-tc = 10e-2;
+tc = 10e-4;
 while (exitflag==-2)
     opts = optimoptions(@fmincon,'TolCon',tc,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-6);
     problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
@@ -123,7 +123,7 @@ while (exitflag==-2)
     tc = tc*10;
     exitflag
 end
-xFinal = Rescale(x,expNo);
+xFinal = Rescale(x,expNo)
 %if exitflag==2
 etchRate = CalcEtchRate(xFinal,expNo);
 % else

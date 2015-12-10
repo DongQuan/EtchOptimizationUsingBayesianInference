@@ -4,20 +4,20 @@ proposalPDFTime = tic;
 global proposalLambda;
 global proposalSD
 global proposalRecord
-global center
+global proposalCenter
 q = 1;
 if subBlock == 1
-    for index = 1:7
-        q = lognpdf(new(index),center(index),proposalSD(subBlock))*q;
+    for index = 1:1
+        q = lognpdf(new(index),proposalCenter(index),proposalSD(subBlock))*q;
     end
 elseif subBlock == 2
-    for actIndex = 8:14
-        q = lognpdf(new(actIndex),center(actIndex),proposalSD(subBlock))*q;
+    for actIndex = 2:2
+        q = lognpdf(new(actIndex),proposalCenter(actIndex),proposalSD(subBlock))*q;
     end
 else
-     q = lognpdf(new(15),center(15),proposalSD(subBlock))*q;
+     q = lognpdf(new(3),proposalCenter(3),proposalSD(subBlock))*q;
 end
-F = q;
+F = log(log(q));
 proposalPDFTimeElapsed = toc(proposalPDFTime);
 assignin('base', 'proposalPDFTimeElapsed', proposalPDFTimeElapsed);
 end
