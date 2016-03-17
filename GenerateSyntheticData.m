@@ -51,12 +51,13 @@ k6 = 2e-17;
 k8 = k2;
 noise = 10;
 expParameters = FactorialDesign();
-current = [k1 k2 k3  k4 k5 k6 k8 2 5 6 10 18 5 8];
+current = [k1 k2 k3  k4 k5 k6 k8 2 2 2 2 2 2 2];
+%current = [k1 k2 k3  k4 k5 k6 k8 2 5 6 10 18 5 8];
 xmulti=zeros(plasmaUnknowns,length(expParameters));
 predER = zeros(1,10);
-for expNo=1:10%:length(expParameters)
+for expNo=1:3%:length(expParameters)
         start = tic;
-        predER(expNo) = GlobalSolver(current,expNo);
+        [predER(expNo),xmulti(:,expNo),flag] = GlobalSolver(current,expNo);
         elapsed = toc(start);
         %PredER(expNo) = CalcEtchRate(xmulti(:,expNo),expNo);
 end

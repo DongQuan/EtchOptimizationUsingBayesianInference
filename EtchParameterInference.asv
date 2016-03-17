@@ -69,9 +69,9 @@ etchRecord = [];
 %Test Arrhenius parameters
 testr1 = 13;
 testr2 = 5;
-error = .2;
+error = .1;
 real = [testr1 testr2 error];
-center = [10 5 .2];
+center = [10 5 1];
 sd = [2 2 .2]
 %sd = ones(15,1)*.25;
 for i = 1:length(center)
@@ -166,12 +166,12 @@ end
 x = linspace(1,10,5)
 %Make initial guess for unknown parameters
 current = zeros(noUnknowns,1);
-for i = 1:3
+for i = 1:2
           current = ProposeParameters(current,i);
 end
 trainingExp = x;
 expParameters = trainingExp;
-trainingData = zeros(length(trainingExp),1);
+trainingData = zeros(length(trainingExp),1)
 for i=1:length(trainingExp)
     trainingData(i) = testArr(real,i); 
 end
@@ -181,7 +181,7 @@ data = trainingData;
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 1000;     % Number of samples (iterations)
+N       = 10000;     % Number of samples (iterations)
 burnin  = 1;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N,noUnknowns); 
@@ -195,11 +195,11 @@ AlphaSet = zeros(N,subBlocks);
 % end
 %Peform MH iterations
 totalTime = tic;
-
+current(3) = .1;
 for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for j=1:3 % Cycle to make the thinning
+    for j=1:1 % Cycle to make the thinning
         SCtime = tic;
         [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
@@ -221,13 +221,13 @@ for i =1:noUnknowns
 end
 draws = N;
 param = zeros(1,3);
-pred = zeros(N,length(data));
+
 
 
 for j = 1:draws
         param(1) = theta(round(rand(1)*N)+1,1);
-        param(2) = theta(round(rand(1)*N)+1,2);
-        param(3) = theta(round(rand(1)*N)+1,3);
+        param(2) = testr1;%theta(round(rand(1)*N)+1,2);
+        param(3) = testr2;%theta(round(rand(1)*N)+1,3);
     for i =1:length(expParameters)
         pred(j,i) = testArr(param,i);
     end

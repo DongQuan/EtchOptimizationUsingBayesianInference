@@ -117,7 +117,7 @@ MS = MultiStart;
 exitflag = -2;
 tc = 10e-4;
 while (exitflag==-2)
-    opts = optimoptions(@fmincon,'TolCon',tc,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-6);
+    opts = optimoptions(@fmincon,'TolCon',tc,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-12);
     problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
     [x,fval,exitflag]  = run(MS,problem,tpoints);
     tc = tc*10;
