@@ -1,9 +1,11 @@
-function [alpha, t, a, prob,PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,subBlock)
+function [alpha, t, a, prob,PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,subBlock)
 %independent sampling from proposal function (current is put here to hold
 %unused blocks of parameters)
-new = ProposalFunction(current,subBlock);
+global alphaRecord
+[new,chainSD] = ProposalFunction(theta,current,subBlock);
 [PosteriorNew] = Posterior(new,subBlock);
-[alpha] = exp(PosteriorNew + ProposalPdf(current,new,subBlock)-(PosteriorCurrent+ProposalPdf(new,current,subBlock))); % Ratio of the density at the candidate (theta_ast) and current (current) points
+[alpha] = exp(PosteriorNew + ProposalPdf(current,new,subBlock,chainSD)-(PosteriorCurrent+ProposalPdf(new,current,subBlock,chainSD))); % Ratio of the density at the candidate (theta_ast) and current (current) points
+alphaRecord = [alphaRecord alpha];
 if rand <= min(alpha,1)
    t    = new;        % Accept the candidate
    prob = min(alpha,1);     % Accept with probability min(alpha,1)

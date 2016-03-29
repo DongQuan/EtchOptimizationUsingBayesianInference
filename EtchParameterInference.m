@@ -30,7 +30,11 @@ global alphaRecord
 global proposedParameterRecord
 global likelihoodRecord
 global etchRecord
-global proposalSD
+global priorSD
+global lb
+global ub
+global proposalLB
+global proposalUB
 
 %define constants
 massIon = 35.45*(1.660568e-27); %kg
@@ -44,9 +48,11 @@ A = 2*pi*R*L + 2*pi*R^2;
 K = 5e-14; %(m^3/s)
 plasmaUnknowns = 25;
 sigma = 16.8e-24;
-noUnknowns = 3; %7 k's (A and B coeff) plus standard error
+noUnknowns = 7; %7 k's (A and B coeff) plus standard error
 noExpParameters = 7;
-global proposalCenter;
+noTrainingExperiments = 4;
+noTestExperiments = 7;
+global priorCenter;
 global kNorm
 
 kNorm = 1;%10e+10;
@@ -67,19 +73,28 @@ likelihoodRecord = [];
 etchRecord = [];
 
 %Test Arrhenius parameters
-testr1 = 13;
-testr2 = 5;
-error = .2;
-real = [testr1 testr2 error];
-center = [10 5 .2];
-sd = [2 2 .2]
+testr1 = 122;
+testr2 = 15;
+testr3 = 14;
+testr4 = 203;
+testr5  = 27;
+testr6 = .4;
+error = 4;
+real = [testr1 testr2 testr3 testr4 testr5 testr6 error];
+center = [50 5 30 300 10 .1 3];
+sd = [50 20 10 75 10 .2 3];
+lb = [0 0 0 0 0 0 0];
+ub = [100 100 500 500 50 700 250];
+proposalLB = [0 0 0 0 0 0 0];
+proposalUB = [500 500 2000 1000 300  1000 500];
 %sd = ones(15,1)*.25;
 for i = 1:length(center)
     m = center(i);
     v = sd(i)^2;
-    proposalSD(i) = sqrt(log(v/(m^2)+1));
-    proposalCenter(i) = log((m^2)/sqrt(v+m^2));
+    priorSD(i) = sqrt(log(v/(m^2)+1));
+    priorCenter(i) = log((m^2)/sqrt(v+m^2));
 end
+
 %X = lognrnd(proposalCenter(2),proposalSD(2),1,30)
 % %Define real values for unknowns to generate syntehtic data
 % r1 = 3e-16;
@@ -163,49 +178,62 @@ end
 % end
 % 
 %Generate Test synthetic Data
-x = linspace(1,10,5)
-%Make initial guess for unknown parameters
-current = zeros(noUnknowns,1);
-for i = 1:3
-          current = ProposeParameters(current,i);
-end
-trainingExp = x;
-expParameters = trainingExp;
-trainingData = zeros(length(trainingExp),1);
-for i=1:length(trainingExp)
-    trainingData(i) = testArr(real,i); 
-end
-%set experiments to training data
+x1 = linspace(1,80,noTrainingExperiments);
+x2 = linspace(0,2*pi,noTrainingExperiments);
+xt1 = linspace(30,150,noTestExperiments);
+xt2 = linspace(0,2*pi,noTestExperiments);
 
+trainingExp(:,1) = x1;
+trainingExp(:,2) = x2;
+testExp(:,1) = xt1;
+testExp(:,2) = xt2;
+expParameters = trainingExp;
+%trainingData = zeros(length(trainingExp),1);
+% for i=1:length(trainingExp)
+%     trainingData(i) = testArr(real,i); 
+% end
+%set experiments to training data
+trainingData = [203.346820980891;307.672804439317;22.6444906998131;418.677132354830];
 data = trainingData;
+
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 1000;     % Number of samples (iterations)
-burnin  = 1;      % Number of runs until the chain approaches stationarity
+N       = 100;     % Number of samples (iterations)
+burnin  = 500;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
 theta   = zeros(N,noUnknowns); 
-acc = zeros(subBlocks,1);
-[PosteriorCurrent] = Posterior(current,1);
-count = 0;
-AlphaSet = zeros(N,subBlocks);
+acc = zeros(noUnknowns,1);
 
-% for i = 1:burnin    % First make the burn-in stage
-%     [t] = MetropolisHastings(current);
-% end
+count = 0;
+AlphaSet = zeros(N,noUnknowns);
+draws = N/2;
+
 %Peform MH iterations
 totalTime = tic;
+%Make initial guess for unknown parameters
+current = zeros(noUnknowns,1);
+for i = 1:noUnknowns
+          current = ProposalFunction(theta,current,i);
+end
+[PosteriorCurrent] = Posterior(current,1);
+rnk = prioritize(current)
 
+for i = 1:burnin    % First make the burn-in stage
+    for j=1:noUnknowns
+      [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
+    end
+end
 for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for j=1:3 % Cycle to make the thinning
+    for m=noUnknowns:-1:1 % Cycle to make the thinning
         SCtime = tic;
-        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(current,PosteriorCurrent,j);
+        j = find(rnk==m);
+        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
         SCelapsed = toc(SCtime);
-        theta(index,:) = t;        % Samples accepted
+        theta(cycle,j) = t(j);        % Samples accepted
         AlphaSet(cycle,j) = alpha;
-        index = index + 1;
         current = t;
         PosteriorCurrent = PosteriorCatch;
         acc(j) = acc(j) + a;  % Accepted ?
@@ -216,49 +244,78 @@ end
 totalTimElapsed = toc(totalTime);
 accrate = acc/N;     % Acceptance rate
 
-for i =1:noUnknowns
-    figure; hist(theta(:,i),100)
-end
-draws = N;
-param = zeros(1,3);
-pred = zeros(N,length(data));
 
 
+plotter(theta)
+param = zeros(1,noUnknowns);
+predTraining = zeros(draws,length(data));
+predTest = zeros(draws,length(testExp));
+
+edges = [(min(trainingData)-100):10:(max(trainingData)+100)];
 for j = 1:draws
-        param(1) = theta(round(rand(1)*N)+1,1);
-        param(2) = theta(round(rand(1)*N)+1,2);
-        param(3) = theta(round(rand(1)*N)+1,3);
-    for i =1:length(expParameters)
-        pred(j,i) = testArr(param,i);
+    for p = 1:noUnknowns
+        param(p) = theta(round(rand(1)*(N-1))+1,p);
+    end
+    for i =1:length(data)
+        predTraining(j,i) = testArr(param,i);
     end
 end
 
-figure;
-subplot(2,3,1);
-hist(pred(:,1),100)
-hold on
-line([data(1) data(1)],[0 100], 'Color', 'r')
-subplot(2,3,2),100;
-hist(pred(:,2))
-hold on
-line([data(2) data(2)],[0 100], 'Color', 'r')
-subplot(2,3,3);
-hist(pred(:,3))
-hold on
-line([data(3) data(3)],[0 100], 'Color', 'r')
-subplot(2,3,4);
-hist(pred(:,4))
-hold on
-line([data(4) data(4)],[0 100], 'Color', 'r')
-subplot(2,3,5);
-hist(pred(:,5))
-hold on
-line([data(5) data(5)],[0 100], 'Color', 'r')
+figure; %Training Experiments
+for k =1:length(trainingExp)
+    outputTitle = sprintf('Train Exp# %d',k);
+    subplot(2,3,k);
+    histogram(predTraining(:,k),edges);
+    [p,edges] = histcounts(predTraining(:,k),edges);
+    hold on
+    line([data(k) data(k)],[0 max(p)], 'Color', 'r')
+    title(outputTitle);
+    xlabel('Value');
+    ylabel('Frequency');
+end
 
-figure;
-hist(pred(:,1),100)
-hold on
-line([1500 1500],[0 NaN], 'Color', 'r')
+expParameters = testExp;
+for j = 1:draws
+    for p=1:noUnknowns
+        param(p) = theta(round(rand(1)*(N-1))+1,p);
+    end
+    for i =1:length(testExp)
+        predTest(j,i) = testArr(param,i);
+    end
+end
+
+for i=1:length(testExp)
+    testData(i) = testArr(real,i); 
+end
+
+figure (3); %Test Experiments
+edges = [(min(testData)-100):10:(max(testData)+100)];
+for k =1:length(testExp)
+    outputTitle = sprintf(' Test Exp# %d',k);
+    subplot(3,3,k);
+    histogram(predTest(:,k),edges);
+    [p,edges] = histcounts(predTest(:,k),edges);
+    hold on
+    line([testData(k) testData(k)],[0 max(p)], 'Color', 'r')
+    title(outputTitle);
+    xlabel('Value');
+    ylabel('Frequency');
+end
+
+figure; 
+for k =1:noUnknowns
+    outputTitle = sprintf('Unknown %d',k);
+    subplot(3,3,k);
+    plot(theta(:,k));
+    hold on
+    line([0 N],[real(k) real(k)], 'Color', 'r')
+    hold on
+    line([0 N],[proposalLB(i) proposalLB(i)], 'Color', 'g')
+    line([0 N],[proposalUB(i) proposalUB(i)], 'Color', 'g')
+    title(outputTitle);
+    xlabel('Cycle #');
+    ylabel('Value');
+end
 % figure; scatter(x,pred);hold on; scatter(x,data,'g')
 % xlabel('Training Experiment')
 % ylabel('Output')
