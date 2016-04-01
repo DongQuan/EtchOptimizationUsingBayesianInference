@@ -7,7 +7,7 @@ likelihoodTime = tic;
 noise = current(3); %change this back to unknown noise parameter eventually
 
 for i=1:length(data)
-    [etchGuess] = testArr(current,i);
+    [etchGuess] = testMatrix(current,i);
     etchRecord = [etchRecord etchGuess]
     Like = lognpdf(data(i),etchGuess,noise) + 10e-20;
     likeData = log(Like) + likeData;
