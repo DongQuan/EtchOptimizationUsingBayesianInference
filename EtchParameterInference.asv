@@ -199,15 +199,15 @@ data = trainingData;
 
 index = 1;
 nn      = 100;       % Number of samples for examine the AC
-N       = 100;     % Number of samples (iterations)
+N       = 10;     % Number of samples (iterations)
 burnin  = 500;      % Number of runs until the chain approaches stationarity
 lag     = 1;        % Thinning or lag period: storing only every lag-th point
-theta   = zeros(N,noUnknowns); 
+theta   = zeros(N*noUnknowns,noUnknowns); 
 acc = zeros(noUnknowns,1);
 
 count = 0;
 AlphaSet = zeros(N,noUnknowns);
-draws = N/2;
+
 
 %Peform MH iterations
 totalTime = tic;
@@ -217,110 +217,41 @@ for i = 1:noUnknowns
           current = ProposalFunction(theta,current,i);
 end
 [PosteriorCurrent] = Posterior(current,1);
-rnk = prioritize(current)
-
-for i = 1:burnin    % First make the burn-in stage
-    for j=1:noUnknowns
-      [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
-    end
-end
-for cycle = 1:N  % Cycle to the number of samples
+rnk = [1 2 3 4 5 6 7];%prioritize(current);
+ind = 0;
+% for i = 1:burnin    % First make the burn-in stage
+%     for j=1:noUnknowns
+%       [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
+%     end
+% end
+%for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
     for m=noUnknowns:-1:1 % Cycle to make the thinning
-        SCtime = tic;
         j = find(rnk==m);
-        [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
-        SCelapsed = toc(SCtime);
-        theta(cycle,j) = t(j);        % Samples accepted
-        AlphaSet(cycle,j) = alpha;
-        current = t;
-        PosteriorCurrent = PosteriorCatch;
-        acc(j) = acc(j) + a;  % Accepted ?
+        for cycle=1:N
+            SCtime = tic;
+            [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
+            SCelapsed = toc(SCtime);
+            theta(cycle+ind*N,:) = t;        % Samples accepted
+            AlphaSet(cycle,j) = alpha;
+            current = t;
+            PosteriorCurrent = PosteriorCatch;
+            acc(j) = acc(j) + a;  % Accepted ?
+        end
+       % plotter(theta(ind*N+1:(ind+1)*N,:),N,trainingExp,testExp,trainingData,real)
+       ind = ind+1;
     end
     count = count+1;
     MHelapsed = toc(MHtime);
-end
+%end
 totalTimElapsed = toc(totalTime);
-accrate = acc/N;     % Acceptance rate
-
-
-
-plotter(theta)
-param = zeros(1,noUnknowns);
-predTraining = zeros(draws,length(data));
-predTest = zeros(draws,length(testExp));
+accrate = acc/N;     % Acceptance rate,. 
 
 
 
 
 
-
-edges = [(min(trainingData)-100):10:(max(trainingData)+100)];
-for j = 1:draws
-    for p = 1:noUnknowns
-        param(p) = theta(round(rand(1)*(N-1))+1,p);
-    end
-    for i =1:length(data)
-        predTraining(j,i) = testArr(param,i);
-    end
-end
-
-figure; %Training Experiments
-for k =1:length(trainingExp)
-    outputTitle = sprintf('Train Exp# %d',k);
-    subplot(2,3,k);
-    histogram(predTraining(:,k),edges);
-    [p,edges] = histcounts(predTraining(:,k),edges);
-    hold on
-    line([data(k) data(k)],[0 max(p)], 'Color', 'r')
-    title(outputTitle);
-    xlabel('Value');
-    ylabel('Frequency');
-end
-
-expParameters = testExp;
-for j = 1:draws
-    for p=1:noUnknowns
-        param(p) = theta(round(rand(1)*(N-1))+1,p);
-    end
-    for i =1:length(testExp)
-        predTest(j,i) = testArr(param,i);
-    end
-end
-
-for i=1:length(testExp)
-    testData(i) = testArr(real,i); 
-end
-
-figure (3); %Test Experiments
-edges = [(min(testData)-100):10:(max(testData)+100)];
-for k =1:length(testExp)
-    outputTitle = sprintf(' Test Exp# %d',k);
-    subplot(3,3,k);
-    histogram(predTest(:,k),edges);
-    [p,edges] = histcounts(predTest(:,k),edges);
-    hold on
-    line([testData(k) testData(k)],[0 max(p)], 'Color', 'r')
-    title(outputTitle);
-    xlabel('Value');
-    ylabel('Frequency');
-end
-
-figure; 
-for k =1:noUnknowns
-    outputTitle = sprintf('Unknown %d',k);
-    subplot(3,3,k);
-    plot(theta(:,k));
-    hold on
-    line([0 N],[real(k) real(k)], 'Color', 'r')
-    hold on
-    line([0 N],[proposalLB(i) proposalLB(i)], 'Color', 'g')
-    line([0 N],[proposalUB(i) proposalUB(i)], 'Color', 'g')
-    title(outputTitle);
-    xlabel('Cycle #');
-    ylabel('Value');
-end
 % figure; scatter(x,pred);hold on; scatter(x,data,'g')
 % xlabel('Training Experiment')
 % ylabel('Output')

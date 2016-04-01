@@ -45,7 +45,7 @@ predTraining
 figure; %Training Experiments
 for k =1:length(trainingExp)
     outputTitle = sprintf('Train Exp# %d',k);
-    edges = [round((min(predTraining(:,k))-100)):10:round((max(predTraining(:,k))+100))]
+    edges = [round((min(predTraining)-100)):10:round((max(predTraining)+100))]
     subplot(2,3,k);
     histogram(predTraining(:,k),edges);
     [p,edges] = histcounts(predTraining(:,k),edges);
@@ -61,6 +61,7 @@ for j = 1:draws
     for p=1:noUnknowns
         param(p) = theta(round(rand(1)*(N-1))+1,p);
     end
+    param
     for i =1:length(testExp)
         predTest(j,i) = testArr(param,i);
     end
@@ -71,10 +72,9 @@ for i=1:length(testExp)
 end
 
 figure; %Test Experiments
-
+edges = [round((min(predTest)-100)):10:round((max(predTest)+100))];
 for k =1:length(testExp)
     outputTitle = sprintf(' Test Exp# %d',k);
-    edges = [round((min(predTest(:,k))-100)):10:round((max(predTest(:,k))+100))];
     subplot(3,3,k);
     histogram(predTest(:,k),edges);
     [p,edges] = histcounts(predTest(:,k),edges);

@@ -224,12 +224,10 @@ ind = 0;
 %       [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
 %     end
 % end
-%for cycle = 1:N  % Cycle to the number of samples
+for cycle = 1:N  % Cycle to the number of samples
     %for j = 1:lag 
     MHtime = tic;
-    for m=noUnknowns:-1:1 % Cycle to make the thinning
-        j = find(rnk==m);
-        for cycle=1:N
+    for j=1:noUnknowns % Cycle to make the thinning
             SCtime = tic;
             [alpha,t, a,prob, PosteriorCatch] = MetropolisHastings(theta,current,PosteriorCurrent,j);
             SCelapsed = toc(SCtime);
@@ -238,7 +236,7 @@ ind = 0;
             current = t;
             PosteriorCurrent = PosteriorCatch;
             acc(j) = acc(j) + a;  % Accepted ?
-        end
+    end
        %plotter(theta(ind*N+1:(ind+1)*N,:),N,trainingExp,testExp,trainingData,real)
        ind = ind+1;
     end
