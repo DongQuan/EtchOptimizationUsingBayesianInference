@@ -2,16 +2,15 @@ function [F] = Likelihood(current)
 global data;
 global likelihoodRecord
 global etchRecord
+imageRows = 10;
+imageColumns = 10;
 likeData = 0;
-likelihoodTime = tic;
-noise = current(4); %change this back to unknown noise parameter eventually
+noise = 0.1;%current(end); %change this back to unknown noise parameter eventually
 for i=1:length(data)
-    [etchGuess] = testArr(current,i);
+    [etchGuess,xmulti,flag] = GlobalSolver(current,i);
     etchRecord = [etchRecord etchGuess];
     Like = normpdf(data(i),etchGuess,noise) + 10e-20;
     likeData = log(Like) + likeData;
 end
 likelihoodRecord = [likelihoodRecord likeData];
-likelihoodTimeElapsed = toc(likelihoodTime);
-assignin('base', 'likelihoodTimeElapsed', likelihoodTimeElapsed);
 F = likeData;

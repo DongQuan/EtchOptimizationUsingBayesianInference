@@ -15,6 +15,7 @@ global plasmaUnknowns;
 global k9
 global sigma
 global expParameters;
+global kNorm
 P = expParameters(expNo,1);
 n0 = P/(kb*T);
 Te = expParameters(expNo,7); %for synthetic experiment generation
@@ -29,7 +30,6 @@ lambdaMax = 1/(sigma*n0);
 maxTe = 25;
 vMax = sqrt(q*maxTe/massIon);
 DMax = lambdaMax*vMax;
-kNorm = 10e-20;
 nNorm = n0;
 x0 = [
 n0/nNorm;
@@ -50,13 +50,14 @@ n0/nNorm;
 1
 1
 1
-kGuess/kNorm;
-kGuess/kNorm;
-kGuess/kNorm;
-kGuess/kNorm;
-kGuess/kNorm;
-kGuess/kNorm;
-kGuess/kNorm];
+kGuess*kNorm;
+kGuess*kNorm;
+kGuess*kNorm;
+kGuess*kNorm;
+kGuess*kNorm;
+kGuess*kNorm;
+kGuess*kNorm];
+
 
 %Reasonable unormalized values for reference
 Beta = 1.6;
@@ -75,24 +76,30 @@ lambda = 1/(sigma*n0);
 
 
 
-
+%x0 = ones(plasmaUnknowns,1);
 l = zeros(plasmaUnknowns,1);
-u = Inf(plasmaUnknowns,1);
-l(10) = 1;
-l(12) = 1;
-u(1) = 1;
-u(2) = 1;%nCl;
-u(3) = 1;
-u(4) = 1/1000;
-u(5) = 1/1000;
-u(6) = 1/1000;
-u(7) = 1/1000;
-u(8) = 1/1000;
-u(9) = 5;
-u(10) = 4;
-u(14) = 1;
-u(15) = 1;
-u(16) = 1;
+u = ones(plasmaUnknowns,1)*10;
+l(9) = expParameters(expNo,7);
+u(9) = l(9); %set Te
+% l(2) = expParameters(8); %set nCl
+% u(2) = l(2)
+% l(14) = expParameters(9);
+% u(14) = l(14);
+% l(10) = 1;
+% l(12) = 1;
+% u(1) = 1;
+% u(2) = 1;%nCl;
+% u(3) = 1;
+% u(4) = 1/1000;
+% u(5) = 1/1000;
+% u(6) = 1/1000;
+% u(7) = 1/1000;
+% u(8) = 1/1000;
+% u(9) = 5;
+% u(10) = 4;
+% u(14) = 1;
+% u(15) = 1;
+% u(16) = 1;
 
 
 trials = 20;
@@ -119,11 +126,12 @@ tc = 10e-4;
 while (exitflag==-2)
     opts = optimoptions(@fmincon,'TolCon',tc,'MaxFunEvals',10e+4,'Maxiter',10e+4,'TolX',10e-12);
     problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'lb',l,'ub',u,'options',opts);
+    %problem = createOptimProblem('fmincon','objective',@(x)0,'nonlcon',@(x)fminconstr(x,Act,B,expNo),'x0',x0,'options',opts);
     [x,fval,exitflag]  = run(MS,problem,tpoints);
     tc = tc*10;
-    exitflag
+    %exitflag
 end
-xFinal = Rescale(x,expNo)
+xFinal = Rescale(x,expNo);
 %if exitflag==2
 etchRate = CalcEtchRate(xFinal,expNo);
 % else
